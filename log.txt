@@ -1,0 +1,27 @@
+Research_Fully_Integrated_withBalloonPopper - Balloon Popper is there
+Research_Fully_Integrated_withAlertBannerCorrected - Alert Banner Correct but the game is still the same.
+
+Returing Customer Quality Score Corrected 
+Pop up corrected (Still Doubtful)
+Dashboard Done
+MongoDB Shit is Done (But still the advertisement are taken from the local folder)
+
+Largest Face Detection in Returning Customer
+
+
+Adjustment
+
+novelty_ad_engine - def load_and_precompute (replace mine on others)
+                    def build_object_context (add this)
+                    context_text = self.build_object_context(detected_object)
+
+                    object_embedding = self.model.encode(
+                        [context_text],
+                        convert_to_numpy=True
+                    ) (this also should add)
+
+                    from services.mappings import AGE_MAP
+
+                    age = AGE_MAP.get(age, age).lower()
+                    gender = gender.lower()
+                    mood = mood.lower()
