@@ -1,0 +1,21 @@
+#requirements-base.txt
+# Backend
+fastapi==0.123.4
+uvicorn==0.38.0
+
+# Database
+pymongo==4.15.5
+
+# Core libraries
+numpy==1.26.4
+pandas==2.2.3
+scikit-learn==1.5.2
+statsmodels==0.14.2
+matplotlib==3.9.2
+pytz==2024.1
+
+# Utilities
+tqdm==4.66.5
+requests==2.32.3
+
+python-multipart==0.0.9
