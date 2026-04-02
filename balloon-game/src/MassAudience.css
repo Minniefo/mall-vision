@@ -1,0 +1,130 @@
+/*.mass-audience-panel {
+  width: 100%;
+  height: 100%;
+  flex: 1;                      /* 🔥 grow 
+  display: flex;
+  flex-direction: column;
+  justify-content: center;      /* center content vertically 
+  align-items: center;
+  padding: 20px;
+  background: transparent;
+}
+
+.mass-ad-img {
+  width: 100%;
+  height: 100%;
+  max-height: 100%;
+  object-fit: contain;          /* keeps proportions 
+  border-radius: 18px;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+}
+
+.mass-title {
+  font-size: 34px;
+  font-weight: 700;
+}
+.mass-subtitle {
+  margin-bottom: 12px;
+  font-size: 14px;
+  color: #ccc;
+}
+
+.mass-demographics {
+  font-size: 14px;
+  opacity: 0.85;
+}
+
+.no-ad {
+  font-size: 22px;
+  opacity: 0.7;
+}*/
+
+/* ============================= */
+/* MASS AUDIENCE PANEL */
+/* ============================= */
+
+.mass-audience-panel {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+
+/* Title */
+
+.mass-title {
+  font-size: 24px;
+  font-weight: 700;
+  margin-bottom: 10px;
+  opacity: 0.9;
+}
+
+.mass-subtitle {
+  font-size: 14px;
+  opacity: 0.6;
+  margin-bottom: 14px;
+}
+
+/* Ad Image */
+
+.mass-ad-img {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+  border-radius: 28px;
+  box-shadow: 0 30px 80px rgba(0,0,0,0.7);
+  transition: transform 0.4s ease;
+}
+
+.mass-ad-img:hover {
+  transform: scale(1.02);
+}
+
+.mass-ad-img.visible {
+  opacity: 1;
+}
+
+/* Demographics */
+
+.mass-demographics {
+  margin-top: 8px;
+  font-size: 15px;
+  opacity: 0.85;
+  text-align: center;
+}
+
+/* No Ad State */
+
+.no-ad {
+  font-size: 20px;
+  opacity: 0.6;
+}
+
+/*Removed for now - may add back later*/
+.mass-ad-container {
+  width: 100%;
+  height: 45%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  position: relative;
+}
+
+.novelty-banner {
+  background: linear-gradient(90deg,#ff7a18,#ffb347);
+  color: white;
+  font-weight: bold;
+  padding: 10px;
+  margin-bottom: 10px;
+  border-radius: 8px;
+  animation: pulse 1.5s infinite;
+}
+
+@keyframes pulse {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.03); }
+  100% { transform: scale(1); }
+}

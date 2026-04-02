@@ -1,0 +1,58 @@
+.app-root {
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Header */
+.top-header {
+  height: 64px;
+  background: #0f0f0f;
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 32px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.4);
+  z-index: 10;
+}
+
+.brand {
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: 1.2px;
+}
+
+/* Tabs */
+.nav-tabs {
+  display: flex;
+  gap: 10px;
+}
+
+.tab {
+  background: transparent;
+  border: none;
+  color: #bbb;
+  font-size: 15px;
+  cursor: pointer;
+  padding: 8px 16px;
+  border-radius: 6px;
+}
+
+.tab:hover {
+  color: white;
+}
+
+.tab.active {
+  background: white;
+  color: black;
+  font-weight: 600;
+}
+
+/* Main content */
+.main-content {
+  flex: 1;
+  height: calc(100vh - 64px);  
+  overflow: hidden; 
+}
+

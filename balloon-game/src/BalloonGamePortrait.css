@@ -1,0 +1,262 @@
+/* ============================= */
+/* GLOBAL DARK BACKGROUND */
+/* ============================= */
+html, body, #root {
+  width: 100%;
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  background: radial-gradient(circle at 50% 15%, #1c2333 0%, #0a0f1c 75%);
+  font-family: "Inter", sans-serif;
+  color: white;
+  overflow: hidden;
+}
+
+/* ============================= */
+/* ROOT PORTRAIT CONTAINER */
+/* ============================= */
+
+.kiosk-portrait-root {
+  height: 100vh;
+  width: 100vw;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+}
+
+/* ============================= */
+/* IDLE / ATTRACT SCREEN */
+/* ============================= */
+
+.idle-screen {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  padding: 40px 30px;
+}
+
+/* Header */
+
+.idle-hero {
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+.idle-title {
+  font-size: 48px;
+  font-weight: 800;
+  letter-spacing: 1px;
+}
+
+.idle-subtitle {
+  margin-top: 8px;
+  font-size: 16px;
+  opacity: 0.7;
+}
+
+/* ============================= */
+/* CAMERA SECTION */
+/* ============================= */
+
+.idle-camera {
+  height: 22%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.section-label {
+  display: none; /* cleaner minimal UI */
+}
+
+.webcam-frame {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 22px;
+  border: 2px solid rgba(0, 255, 180, 0.6);
+  box-shadow: 0 0 35px rgba(0, 255, 200, 0.4);
+}
+
+/* ============================= */
+/* MASS AD SECTION */
+/* ============================= */
+
+.idle-mass {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+/* ============================= */
+/* START BUTTON */
+/* ============================= */
+
+.idle-cta {
+  margin-top: auto;
+  padding-top: 20px;
+}
+
+@keyframes pulse {
+  0% { box-shadow: 0 0 30px rgba(0,255,180,0.5); }
+  50% { box-shadow: 0 0 60px rgba(0,255,200,0.9); }
+  100% { box-shadow: 0 0 30px rgba(0,255,180,0.5); }
+}
+
+.start-btn-modern {
+  width: 100%;
+  padding: 22px;
+  font-size: 24px;
+  font-weight: 800;
+  border-radius: 60px;
+  border: none;
+  background: linear-gradient(90deg, #00d4ff, #00ff88);
+  color: #000;
+  cursor: pointer;
+  animation: pulse 2.5s infinite;
+  transition: 0.3s ease;
+}
+
+.start-btn-modern:hover {
+  transform: scale(1.04);
+}
+
+/* ============================= */
+/* GAME SCREEN */
+/* ============================= */
+
+.kiosk-top {
+  padding: 20px 30px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.kiosk-title {
+  font-size: 38px;
+  font-weight: 800;
+}
+
+.kiosk-metrics {
+  display: flex;
+  gap: 14px;
+}
+
+.metric-box {
+  background: rgba(255, 255, 255, 0.1);
+  padding: 12px 18px;
+  border-radius: 16px;
+  font-size: 20px;
+  font-weight: 700;
+  backdrop-filter: blur(8px);
+}
+
+.camera-wrap {
+  height: 22%;
+  padding: 0 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.canvas-wrap {
+  flex: 1;
+  padding: 20px 30px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  position: relative;
+  z-index: 1;
+}
+
+.game-canvas {
+  width: 100%;
+  height: 100%;
+  border-radius: 28px;
+  border: 2px solid #00d4ff;
+  box-shadow: 0 0 40px rgba(0, 212, 255, 0.4);
+  cursor: pointer;
+}
+
+/* ============================= */
+/* POPUPS */
+/* ============================= */
+
+.popup-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 9999;
+}
+
+.popup-card {
+  width: min(640px, 90vw);
+  background: #111827;
+  color: white;
+  padding: 30px;
+  border-radius: 24px;
+  text-align: center;
+  box-shadow: 0 0 40px rgba(0, 0, 0, 0.6);
+}
+
+.popup-ad {
+  width: 100%;
+  max-height: 400px;
+  object-fit: contain;
+  margin: 20px 0;
+  border-radius: 18px;
+}
+
+.popup-buttons {
+  display: flex;
+  justify-content: center;
+  gap: 16px;
+}
+
+.btn {
+  padding: 14px 24px;
+  font-size: 16px;
+  font-weight: 700;
+  border: none;
+  border-radius: 14px;
+  background: #2563eb;
+  color: white;
+  cursor: pointer;
+}
+
+.btn:hover {
+  background: #1d4ed8;
+}
+
+.similarity-debug {
+  margin-top: 15px;
+  padding: 10px;
+  background: rgba(0,0,0,0.05);
+  border-radius: 8px;
+  font-size: 14px;
+}
+
+.similarity-debug h4 {
+  margin-bottom: 5px;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.capture-btn {
+  margin-top: 15px;
+  padding: 12px 24px;
+  font-size: 18px;
+  border-radius: 12px;
+  background: #ff4d4d;
+  color: white;
+  border: none;
+  cursor: pointer;
+
+  display: block;
+}
