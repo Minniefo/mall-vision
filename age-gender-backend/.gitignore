@@ -1,0 +1,12 @@
+# Python
+__pycache__/
+*.pyc
+
+# Virtual environments
+mallvision/
+
+# Environment files
+.env
+
+# Mac files
+.DS_Store
