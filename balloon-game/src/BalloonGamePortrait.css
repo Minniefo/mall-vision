@@ -60,11 +60,19 @@ body {
 /* CAMERA SECTION */
 /* ============================= */
 
-.idle-camera {
+/*.idle-camera {
   height: 22%;
   display: flex;
   justify-content: center;
   align-items: center;
+}*/
+
+.camera-wrap,
+.idle-camera {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin: 20px 0;
 }
 
 .section-label {
@@ -95,9 +103,17 @@ body {
 /* START BUTTON */
 /* ============================= */
 
-.idle-cta {
+/*.idle-cta {
   margin-top: auto;
   padding-top: 20px;
+}*/
+
+.idle-cta {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 100%;
+  align-items: center;
 }
 
 @keyframes pulse {
@@ -154,13 +170,14 @@ body {
   backdrop-filter: blur(8px);
 }
 
-.camera-wrap {
+/*.camera-wrap {
   height: 22%;
   padding: 0 30px;
   display: flex;
   align-items: center;
   justify-content: center;
-}
+}*/
+
 
 .canvas-wrap {
   flex: 1;
@@ -259,4 +276,54 @@ body {
   cursor: pointer;
 
   display: block;
+}
+
+.camera-container {
+  position: relative;
+  width: 360px;
+  height: 240px;
+}
+
+.filter-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  pointer-events: none;
+}
+
+.photo-strip {
+  display: flex;
+  gap: 10px;
+  margin-top: 15px;
+  padding: 10px;
+  overflow-x: auto;
+  justify-content: center;
+}
+
+.photo-thumbnail {
+  width: 130px;
+  aspect-ratio: 4 / 3;
+  object-fit: cover;
+  border-radius: 10px;
+  border: 2px solid #fff;
+  box-shadow: 0 3px 10px rgba(0,0,0,0.3);
+  transition: transform 0.15s ease;
+}
+
+.photo-thumbnail:active {
+  transform: scale(0.92);
+}
+
+.main-preview {
+  width: 100%;
+  max-width: 360px;   /* match your camera */
+  border-radius: 12px;
+  margin: 10px auto;
+  display: block;
+}
+
+.secondary-btn {
+  margin-top: 12px;
+  background: linear-gradient(90deg, #ff8a00, #ff4d4d);
+  color: white;
 }

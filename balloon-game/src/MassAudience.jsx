@@ -3,7 +3,7 @@ import React, { useEffect, useState } from "react";
 import axios from "axios";
 import "./MassAudience.css";
 
-function MassAudience({ isGameRunning }) {
+function MassAudience({ screen}) {
   const [massAdImage, setMassAdImage] = useState(null);
   const [massAge, setMassAge] = useState(null);
   const [massGender, setMassGender] = useState(null);
@@ -21,10 +21,14 @@ function MassAudience({ isGameRunning }) {
           return "LOW";
         };
 
-  useEffect(() => {
-    if (isGameRunning) return;
+  /*useEffect(() => {
+    //if (isGameRunning) return;
 
     const interval = setInterval(async () => {
+
+      const isIdleScreen = document.querySelector(".idle-screen");
+      if (!isIdleScreen) return;
+
       try {
         // 1️⃣ Capture frame from existing webcam video
         const video = document.querySelector("video");
@@ -101,7 +105,70 @@ function MassAudience({ isGameRunning }) {
     }, 2000);
 
     return () => clearInterval(interval);
-  }, [isGameRunning]);
+  //}, [isGameRunning]);
+  }, []);*/
+
+  useEffect(() => {
+    let interval;
+
+    if (screen === "idle") {
+      console.log("🟢 MassAudience STARTED");
+
+      interval = setInterval(async () => {
+        try {
+          const video = document.querySelector("video");
+          if (!video) return;
+
+          const canvas = document.createElement("canvas");
+          canvas.width = video.videoWidth || 320;
+          canvas.height = video.videoHeight || 240;
+
+          const ctx = canvas.getContext("2d");
+          ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+          const frameBase64 = canvas.toDataURL("image/jpeg");
+
+          await axios.post("http://localhost:8000/mass_frame", {
+            image: frameBase64,
+            session_id: "mass"
+          });
+
+          const res = await axios.get("http://localhost:8000/current_mass_ad");
+
+          const {
+            ad_image,
+            age_group,
+            gender,
+            emotion,
+            engagement_pct,
+            ad_source,
+            detected_object
+          } = res.data;
+
+          setMassAdImage(ad_image || null);
+          setMassEmotion(emotion || null);
+          setMassAge(age_group || null);
+          setMassGender(gender || null);
+          setMassEngagement(
+            engagement_pct !== undefined ? engagement_pct : null
+          );
+          setAdSource(ad_source || null);
+          setDetectedObject(detected_object || null);
+
+        } catch (err) {
+          console.error("Mass audience error:", err);
+        }
+      }, 2000);
+    }
+
+    return () => {
+      if (interval) {
+        console.log("🔴 MassAudience STOPPED");
+        clearInterval(interval);
+      }
+    };
+
+  }, [screen]);
 
   return (
   <div className="mass-audience-panel">

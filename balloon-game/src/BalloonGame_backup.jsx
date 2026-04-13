@@ -4,10 +4,14 @@ import axios from "axios";
 import MassAudience from "./MassAudience";
 import "./BalloonGamePortrait.css";
 import "./MassAudience.css";
-import BalloonPopper from "./BalloonGame";
 
-function PhotoBooth() {
+function BalloonGame() {
+  const canvasRef = useRef(null);
   const webcamRef = useRef(null);
+  const balloons = useRef([]);
+  const popSoundRef = useRef(null);
+
+  const [score, setScore] = useState(0);
   const [timer, setTimer] = useState(30);
   const [isRunning, setIsRunning] = useState(false);
   const [sessionId, setSessionId] = useState(null);
@@ -25,94 +29,98 @@ function PhotoBooth() {
   const [selectedDeviceId, setSelectedDeviceId] = useState(null);
   const [screen, setScreen] = useState("idle"); 
   const [daysSinceLastVisit, setDaysSinceLastVisit] = useState(null);
-  const [filteredImage, setFilteredImage] = useState(null);
-  const [capturedPhotos, setCapturedPhotos] = useState([]);
-  const [captureCount, setCaptureCount] = useState(0);
-  const [adTriggered, setAdTriggered] = useState(false);
-  const hasTriggeredRef = useRef(false);
-  const [experience, setExperience] = useState(null); // "photo" | "balloon" | null
   const USE_UGREEN_CAMERA = false; 
   // true  → use UGREEN USB webcam
   // false → use laptop default webcam
   // "idle" | "game" | "result"
 
   // -------------------------------
+  // Sound
+  // -------------------------------
+  useEffect(() => {
+    popSoundRef.current = new Audio("/sounds/pop.mp3");
+    popSoundRef.current.volume = 0.5;
+  }, []);
+
+  // -------------------------------
+  // Balloon assets
+  // -------------------------------
+  const balloonImages = {
+    red: "/balloons/1.png",
+    blue: "/balloons/2.png",
+    green: "/balloons/3.png",
+    yellow: "/balloons/4.png",
+    purple: "/balloons/5.png",
+    orange: "/balloons/6.png",
+  };
+
+  const createBalloon = () => {
+    const canvas = canvasRef.current;
+    if (!canvas) return null;
+
+    const colors = Object.keys(balloonImages);
+    const color = colors[Math.floor(Math.random() * colors.length)];
+
+    const img = new Image();
+    img.src = balloonImages[color];
+
+    return {
+      x: Math.random() * canvas.width,
+      y: canvas.height + 50,
+      radius: Math.random() * 30 + 40,
+      speed: Math.random() * 1.5 + 0.5,
+      color,
+      img,
+    };
+  };
+
+  // -------------------------------
   // Start game (logic unchanged)
   // -------------------------------
-  const startGame = async (selectedExperience) => {
+  const startGame = async () => {
     try {
+      setScreen("game");
+      // Fullscreen for kiosk feel (safe: only triggers if browser allows)
+      document.documentElement.requestFullscreen?.().catch(() => {});
+
       const res = await axios.post("http://localhost:8000/start_game");
 
-      console.log("🎮 Start Game response:", res.data);
-
-      const {
-        visitor_type,
-        visit_count,
-        session_id,
-        days_since_last_visit
-      } = res.data;
+      const { visitor_type, visit_count, session_id, days_since_last_visit } = res.data;
+      setDaysSinceLastVisit(days_since_last_visit);
 
       setSessionId(session_id);
       setVisitorType(visitor_type);
       setVisitCount(visit_count);
-      setDaysSinceLastVisit(days_since_last_visit);
 
-      // 🔥 Returning user → wait for confirmation
       if (visitor_type === "returning") {
-        setExperience(selectedExperience);
         setShowReturningPopup(true);
         return;
       }
 
-      // ✅ Store selected experience
-      setExperience(selectedExperience);
-
-      // 🔥 COMMON RESET (safe for both)
-      setCapturedPhotos([]);
+      setScore(0);
       setTimer(30);
+      balloons.current = [];
       setIsRunning(true);
-      setCaptureCount(0);
-      setAdTriggered(false);
-      hasTriggeredRef.current = false;
-
-      // ✅ KEY CHANGE HERE 👇
-      if (selectedExperience === "photo") {
-        setScreen("game");       // your existing photo booth
-      } else if (selectedExperience === "balloon") {
-        setScreen("balloon");    // new screen
-      }
-
     } catch (err) {
       console.error("Start game error:", err);
     }
   };
 
-// -------------------------------
-// Timer
-// -------------------------------
-useEffect(() => {
-  if (!isRunning) return;
+  // -------------------------------
+  // Timer
+  // -------------------------------
+  useEffect(() => {
+    if (!isRunning) return;
 
-  const interval = setInterval(() => {
-    setTimer((prev) => prev - 1);
-  }, 1000);
+    if (timer <= 0) {
+      setIsRunning(false);
+      fetchFinalPrediction();
+      return;
+    }
 
-  return () => clearInterval(interval);
-}, [isRunning]);
-
-useEffect(() => {
-  if (timer <= 0 && isRunning && !hasTriggeredRef.current && experience === "photo") {
-    hasTriggeredRef.current = true;
-
-    console.log("⏱ Timer ended → triggering ad");
-
-    setAdTriggered(true);
-    setIsRunning(false);
-    setTimer(0);
-
-    fetchFinalPrediction();
-  }
-}, [timer, isRunning]);
+    const interval = setInterval(() => setTimer((t) => t - 1), 1000);
+    return () => clearInterval(interval);
+  }, [isRunning, timer]);
 
   // -------------------------------
   // Prefer external cam (unchanged)
@@ -223,55 +231,135 @@ useEffect(() => {
   }, []);
 
   // -------------------------------
+  // Balloon movement
+  // -------------------------------
+  useEffect(() => {
+    if (!isRunning) return;
+
+    const canvas = canvasRef.current;
+    const ctx = canvas.getContext("2d");
+
+    const spawnInterval = setInterval(() => {
+      balloons.current.push(createBalloon());
+    }, 800);
+
+    const update = () => {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      balloons.current.forEach((balloon) => {
+        balloon.y -= balloon.speed;
+
+        ctx.drawImage(
+          balloon.img,
+          balloon.x - balloon.radius,
+          balloon.y - balloon.radius,
+          balloon.radius * 2,
+          balloon.radius * 2
+        );
+
+        if (balloon.y + balloon.radius < 0) {
+          balloons.current = balloons.current.filter((b) => b !== balloon);
+        }
+      });
+
+      requestAnimationFrame(update);
+    };
+
+    update();
+    return () => clearInterval(spawnInterval);
+  }, [isRunning]);
+
+  useEffect(() => {
+  if (screen !== "game") return;
+
+  const canvas = canvasRef.current;
+  if (!canvas) return;
+
+  const resizeCanvas = () => {
+    const rect = canvas.getBoundingClientRect();
+    canvas.width = rect.width;
+    canvas.height = rect.height;
+  };
+
+  resizeCanvas();
+  window.addEventListener("resize", resizeCanvas);
+
+  return () => window.removeEventListener("resize", resizeCanvas);
+}, [screen]);
+
+  // -------------------------------
+  // Click to pop
+  // -------------------------------
+  const handleClick = (event) => {
+    if (!isRunning) return;
+
+    const rect = canvasRef.current.getBoundingClientRect();
+    const clickX = event.clientX - rect.left;
+    const clickY = event.clientY - rect.top;
+
+    balloons.current.forEach((balloon) => {
+      const dx = clickX - balloon.x;
+      const dy = clickY - balloon.y;
+
+      if (Math.sqrt(dx * dx + dy * dy) < balloon.radius) {
+        setScore((s) => s + 1);
+
+        if (popSoundRef.current) {
+          popSoundRef.current.currentTime = 0;
+          popSoundRef.current.play();
+        }
+
+        balloons.current = balloons.current.filter((b) => b !== balloon);
+      }
+    });
+  };
+
+  // -------------------------------
   // Send frames
   // -------------------------------
   const sendFrameToBackend = async (image) => {
     try {
       if (!sessionId) return;
 
-      const res = await axios.post("http://localhost:8000/upload_frame", {
+      await axios.post("http://localhost:8000/upload_frame", {
         image,
         session_id: sessionId,
-        preview: false ,  // 🔥 ADD THIS
-        capture: true
       });
-
-      // 🔥 IMPORTANT → update webcam with filtered image
-      if (res.data.image) {
-        // You need a state for this
-        setFilteredImage(`data:image/jpeg;base64,${res.data.image}`);
-      }
-
     } catch (err) {
       console.error("Error sending frame:", err);
     }
   };
 
   useEffect(() => {
-    if (screen !== "game" && screen !== "balloon") return;
-
-    console.log("📸 Checking webcamRef:", webcamRef.current);
+    if (!webcamRef.current) return;
 
     const interval = setInterval(() => {
-      if (!webcamRef.current) return;
-
       const shot = webcamRef.current.getScreenshot();
-      console.log("📷 Shot captured:", !!shot);
       if (!shot) return;
 
-      if (sessionId) {
+      // 🔹 If in game → send with session
+      if (screen === "game" && sessionId) {
         sendFrameToBackend(shot);
       }
-    }, 800);
+
+      // 🔹 If in idle → send MASS frame
+      if (screen === "idle") {
+        axios.post("http://localhost:8000/upload_frame", {
+          image: shot,
+          session_id: null,
+        });
+      }
+
+    }, 2000);
 
     return () => clearInterval(interval);
-}, [screen, sessionId]);
+  }, [screen, sessionId]);
 
   // -------------------------------
   // Poll session state for returning popup during game
   // -------------------------------
-  /*useEffect(() => {
-    if (screen !== "game" || !sessionId|| showReturningPopup) return;
+  useEffect(() => {
+    if (screen !== "game" || !sessionId) return;
 
     const pollInterval = setInterval(async () => {
       try {
@@ -296,11 +384,10 @@ useEffect(() => {
       } catch (err) {
         console.error("Error polling session state:", err);
       }
-    }, 2500); // Poll every 1 second
+    }, 1000); // Poll every 1 second
 
     return () => clearInterval(pollInterval);
-  }, [screen, sessionId, showReturningPopup]);*/
-
+  }, [screen, sessionId, showReturningPopup]);
 
   // -------------------------------
   const fetchFinalPrediction = async () => {
@@ -332,88 +419,14 @@ useEffect(() => {
     } catch (e) {
       console.error("Acknowledge failed:", e);
     }
-
     setShowReturningPopup(false);
-
-    // ✅ NOW enter photo booth
-    if (experience === "photo") {
-      setCapturedPhotos([]);
-      setScreen("game");
-      setTimer(30);
-      setIsRunning(true);
-      setCaptureCount(0);
-      setAdTriggered(false);
-      hasTriggeredRef.current = false;
-    } else if (experience === "balloon") {
-      setScreen("balloon");
-    }
+    setScore(0);
+    setTimer(30);
+    balloons.current = [];
+    setIsRunning(true);
   };
 
-const handleCapture = async () => {
-  console.log("📸 Capture clicked");
-
-  if (!webcamRef.current) return;
-
-  //const image = webcamRef.current.getScreenshot();
-  const image = filteredImage || webcamRef.current.getScreenshot();
-  if (!image) return;
-
-  // ✅ Save photo
-  setCapturedPhotos((prev) => {
-    const updated = [...prev, image];
-    return updated.slice(-5);
-  });
-
-  try {
-    // ✅ SEND FRAMES FIRST
-    for (let i = 0; i < 5; i++) {
-      await axios.post("http://localhost:8000/upload_frame", {
-        image,
-        session_id: sessionId,
-        preview: false,
-        capture: false
-      });
-    }
-
-    console.log("📸 Frames sent to backend");
-
-    // 🔥 NOW update capture count AFTER frames
-    {/*setCaptureCount((prev) => {
-      const newCount = prev + 1;
-
-      console.log("📸 Capture count:", newCount);
-
-      if (!adTriggered && newCount >= 3) {
-        console.log("🎯 3 captures reached → triggering ad");
-
-        setAdTriggered(true);
-        fetchFinalPrediction(); // ✅ NOW SAFE
-      }
-
-      return newCount;
-    });*/}
-
-    const newCount = captureCount + 1;
-    setCaptureCount(newCount);
-
-    console.log("📸 Capture count:", newCount);
-
-    if (!adTriggered && newCount >= 3) {
-      console.log("🎯 3 captures reached → triggering ad");
-
-      setAdTriggered(true);
-      setIsRunning(false); // 🔥 STOP TIMER
-      hasTriggeredRef.current = true;
-      fetchFinalPrediction();
-    }
-
-  } catch (err) {
-    console.error("❌ Capture error:", err);
-  }
-};
-
 return (
-
   <div className="kiosk-portrait-root">
 
     {/* IDLE SCREEN */}
@@ -443,21 +456,16 @@ return (
             height: 720,
           }}
         />
-        
         </div>
 
     {/* 🔵 Mass Audience Recommendation */}
     <div className="idle-mass">
-      <MassAudience screen={screen} />
+      <MassAudience isGameRunning={false} />
     </div>
 
     <div className="idle-cta">
-      <button className="start-btn-modern" onClick={() => startGame("photo")}>
-        📸 Photo Booth
-      </button>
-
-      <button className="start-btn-modern secondary-btn" onClick={() => startGame("balloon")}>
-        🎈 Balloon Popper
+      <button className="start-btn-modern" onClick={startGame}>
+        ▶ Start Game
       </button>
     </div>
 
@@ -469,8 +477,9 @@ return (
       <>
         {/* your existing top bar + canvas + camera + mass removed */}
         <div className="kiosk-top">
-          <div className="kiosk-title">AI Photo Booth</div>
+          <div className="kiosk-title">Balloon Popper</div>
           <div className="kiosk-metrics">
+            <div className="metric-box">🎯 {score}</div>
             <div className="metric-box">⏱ {timer}s</div>
           </div>
         </div>
@@ -479,65 +488,29 @@ return (
 
         <div className="camera-wrap">
           <div className="section-label">Your Camera</div>
-          <div className="camera-container">
-  <Webcam
-    audio={false}
-    ref={webcamRef}
-    screenshotFormat="image/jpeg"
-    width={360}
-    height={240}
-    className="webcam-frame"
-  />
-
-  {filteredImage && (
-    <img
-      src={filteredImage}
-      className="filter-overlay"
-      width={360}
-      height={240}
-    />
-  )}
-</div>
-         </div>
-         <button className="capture-btn" onClick={handleCapture}>
-            📸 Capture
-        </button>
-
-
-        {capturedPhotos.length > 0 && (
-          <img
-            src={capturedPhotos[capturedPhotos.length - 1]}
-            alt="Latest"
-            className="main-preview"
+          <Webcam
+            audio={false}
+            ref={webcamRef}
+            screenshotFormat="image/jpeg"
+            width={360}
+            height={240}
+            className="webcam-frame"
+            videoConstraints={{
+              deviceId: selectedDeviceId ? { exact: selectedDeviceId } : undefined,
+              width: 1280,
+              height: 720,
+            }}
           />
-        )}
+        </div>
 
-        <div className="photo-strip">
-        {capturedPhotos.map((photo, index) => (
-          <img
-            key={index}
-            src={photo}
-            alt={`Captured ${index + 1}`}
-            className="photo-thumbnail"
+        <div className="canvas-wrap">
+          <canvas
+            ref={canvasRef}
+            onClick={handleClick}
+            className="game-canvas"
           />
-        ))}
-      </div>
+        </div>
       </>
-    )}
-
-    {screen === "balloon" && (
-      <BalloonPopper
-        sessionId={sessionId}
-        onGameEnd={async () => {
-        console.log("🎈 Balloon finished → preparing ad");
-        
-        setAdTriggered(true);
-        setIsRunning(false);
-        hasTriggeredRef.current = true;
-
-        fetchFinalPrediction();
-      }}
-      />
     )}
 
     {/* Returning popup stays as-is */}
@@ -592,6 +565,7 @@ return (
             <p>No advertisement available.</p>
           )}
 
+          <p><b>Score:</b> {score}</p>
           <p><b>Detected:</b> {finalAge}, {finalGender}</p>
 
           <div className="popup-buttons">
@@ -600,7 +574,6 @@ return (
               onClick={() => {
                 setShowAdPopup(false);
                 setScreen("idle");
-                setExperience(null);
               }}
             >
               Close
@@ -610,7 +583,7 @@ return (
               className="btn"
               onClick={() => {
                 setShowAdPopup(false);
-                startGame(experience);
+                startGame();
               }}
             >
               Play Again
@@ -625,4 +598,4 @@ return (
 }
 
 
-export default PhotoBooth;
+export default BalloonGame;
