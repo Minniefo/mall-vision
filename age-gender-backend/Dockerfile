@@ -1,4 +1,4 @@
-FROM python:3.9-slim
+FROM python:3.10-slim
 
 # Install system dependencies for OpenCV, MTCNN, and AI libraries
 # libgl1-mesa-glx and libglib2.0-0 are specifically required by OpenCV
