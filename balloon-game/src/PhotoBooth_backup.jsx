@@ -4,7 +4,6 @@ import axios from "axios";
 import MassAudience from "./MassAudience";
 import "./BalloonGamePortrait.css";
 import "./MassAudience.css";
-import BalloonPopper from "./BalloonGame";
 
 function PhotoBooth() {
   const webcamRef = useRef(null);
@@ -30,7 +29,6 @@ function PhotoBooth() {
   const [captureCount, setCaptureCount] = useState(0);
   const [adTriggered, setAdTriggered] = useState(false);
   const hasTriggeredRef = useRef(false);
-  const [experience, setExperience] = useState(null); // "photo" | "balloon" | null
   const USE_UGREEN_CAMERA = false; 
   // true  → use UGREEN USB webcam
   // false → use laptop default webcam
@@ -39,7 +37,7 @@ function PhotoBooth() {
   // -------------------------------
   // Start game (logic unchanged)
   // -------------------------------
-  const startGame = async (selectedExperience) => {
+  const startGame = async () => {
     try {
       const res = await axios.post("http://localhost:8000/start_game");
 
@@ -57,39 +55,56 @@ function PhotoBooth() {
       setVisitCount(visit_count);
       setDaysSinceLastVisit(days_since_last_visit);
 
-      // 🔥 Returning user → wait for confirmation
+      // 🔥 KEY LOGIC HERE
       if (visitor_type === "returning") {
-        setExperience(selectedExperience);
+        // ❌ DO NOT go to game yet
         setShowReturningPopup(true);
         return;
       }
 
-      // ✅ Store selected experience
-      setExperience(selectedExperience);
-
-      // 🔥 COMMON RESET (safe for both)
+      // ✅ NEW USER → go directly to game
       setCapturedPhotos([]);
+      setScreen("game");
       setTimer(30);
       setIsRunning(true);
       setCaptureCount(0);
       setAdTriggered(false);
       hasTriggeredRef.current = false;
 
-      // ✅ KEY CHANGE HERE 👇
-      if (selectedExperience === "photo") {
-        setScreen("game");       // your existing photo booth
-      } else if (selectedExperience === "balloon") {
-        setScreen("balloon");    // new screen
-      }
-
     } catch (err) {
       console.error("Start game error:", err);
     }
   };
 
-// -------------------------------
-// Timer
-// -------------------------------
+  // -------------------------------
+  // Timer
+  // -------------------------------
+  {/*useEffect(() => {
+  if (!isRunning) return;
+
+  const interval = setInterval(() => {
+    setTimer((prev) => {
+      if (prev <= 1) {
+        clearInterval(interval);
+
+        if (!adTriggered) {
+          console.log("⏱ Timer ended → triggering ad");
+
+          setAdTriggered(true);
+          setIsRunning(false);
+          fetchFinalPrediction();
+        }
+
+        return 0;
+      }
+
+      return prev - 1;
+    });
+  }, 1000);
+
+  return () => clearInterval(interval);
+}, [isRunning, adTriggered]);*/}
+
 useEffect(() => {
   if (!isRunning) return;
 
@@ -101,7 +116,7 @@ useEffect(() => {
 }, [isRunning]);
 
 useEffect(() => {
-  if (timer <= 0 && isRunning && !hasTriggeredRef.current && experience === "photo") {
+  if (timer <= 0 && isRunning && !hasTriggeredRef.current) {
     hasTriggeredRef.current = true;
 
     console.log("⏱ Timer ended → triggering ad");
@@ -248,15 +263,12 @@ useEffect(() => {
   };
 
   useEffect(() => {
-    if (screen !== "game" && screen !== "balloon") return;
-
-    console.log("📸 Checking webcamRef:", webcamRef.current);
+    if (screen !== "game") return;
 
     const interval = setInterval(() => {
       if (!webcamRef.current) return;
 
       const shot = webcamRef.current.getScreenshot();
-      console.log("📷 Shot captured:", !!shot);
       if (!shot) return;
 
       if (sessionId) {
@@ -336,17 +348,10 @@ useEffect(() => {
     setShowReturningPopup(false);
 
     // ✅ NOW enter photo booth
-    if (experience === "photo") {
-      setCapturedPhotos([]);
-      setScreen("game");
-      setTimer(30);
-      setIsRunning(true);
-      setCaptureCount(0);
-      setAdTriggered(false);
-      hasTriggeredRef.current = false;
-    } else if (experience === "balloon") {
-      setScreen("balloon");
-    }
+    setCapturedPhotos([]);
+    setScreen("game");
+    setTimer(30);
+    setIsRunning(true);
   };
 
 const handleCapture = async () => {
@@ -413,7 +418,6 @@ const handleCapture = async () => {
 };
 
 return (
-
   <div className="kiosk-portrait-root">
 
     {/* IDLE SCREEN */}
@@ -452,12 +456,8 @@ return (
     </div>
 
     <div className="idle-cta">
-      <button className="start-btn-modern" onClick={() => startGame("photo")}>
-        📸 Photo Booth
-      </button>
-
-      <button className="start-btn-modern secondary-btn" onClick={() => startGame("balloon")}>
-        🎈 Balloon Popper
+      <button className="start-btn-modern" onClick={startGame}>
+        ▶ Start Game
       </button>
     </div>
 
@@ -525,21 +525,6 @@ return (
       </>
     )}
 
-    {screen === "balloon" && (
-      <BalloonPopper
-        sessionId={sessionId}
-        onGameEnd={async () => {
-        console.log("🎈 Balloon finished → preparing ad");
-        
-        setAdTriggered(true);
-        setIsRunning(false);
-        hasTriggeredRef.current = true;
-
-        fetchFinalPrediction();
-      }}
-      />
-    )}
-
     {/* Returning popup stays as-is */}
     {showReturningPopup && (
       <div className="popup-overlay">
@@ -600,7 +585,6 @@ return (
               onClick={() => {
                 setShowAdPopup(false);
                 setScreen("idle");
-                setExperience(null);
               }}
             >
               Close
@@ -610,7 +594,7 @@ return (
               className="btn"
               onClick={() => {
                 setShowAdPopup(false);
-                startGame(experience);
+                startGame();
               }}
             >
               Play Again
