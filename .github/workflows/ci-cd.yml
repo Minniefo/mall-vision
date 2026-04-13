@@ -46,7 +46,7 @@ jobs:
 
       - name: ⚙️ Check FastAPI app startup
         run: |
-          python -c "from main import app; print('FastAPI app loaded successfully')"
+          python -c "from main2 import app; print('FastAPI app loaded successfully')"
 
 
   # =========================
