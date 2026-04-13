@@ -12,8 +12,11 @@ WORKDIR /app
 
 # Copy requirement files and install dependencies
 # We use no-cache-dir to keep the image size smaller
-COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
+COPY requirements-base.txt .
+COPY requirements-ai.txt .
+RUN pip install --no-cache-dir -r requirements-base.txt
+RUN pip install --no-cache-dir -r requirements-ai.txt
+
 
 # Copy the entire backend source code
 COPY . .
