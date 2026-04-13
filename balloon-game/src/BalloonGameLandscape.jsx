@@ -257,7 +257,7 @@ function BalloonGame() {
     try {
       if (!sessionId) return; // ⛔ safety check
 
-      await axios.post("http://localhost:8000/upload_frame", {
+      await axios.post(`${import.meta.env.VITE_API_URL || "http://localhost:8000"}/upload_frame`, {
         image: image,
         session_id: sessionId
       });
@@ -287,7 +287,7 @@ function BalloonGame() {
 
     const pollInterval = setInterval(async () => {
       try {
-        const res = await axios.get("http://localhost:8000/session_state");
+        const res = await axios.get(`${import.meta.env.VITE_API_URL || "http://localhost:8000"}/session_state`);
         const { visitor_type, visit_count } = res.data;
 
         // If backend identified a returning customer, show popup and pause game
@@ -310,7 +310,7 @@ function BalloonGame() {
   // -------------------------------
   const fetchFinalPrediction = async () => {
   try {
-    const res = await axios.get("http://localhost:8000/final_prediction");
+    const res = await axios.get(`${import.meta.env.VITE_API_URL || "http://localhost:8000"}/final_prediction`);
     console.log("FINAL PREDICTION RESPONSE:", res.data);
 
     if (res.data.error) {

@@ -41,7 +41,7 @@ function PhotoBooth() {
   // -------------------------------
   const startGame = async (selectedExperience) => {
     try {
-      const res = await axios.post("http://localhost:8000/start_game");
+      const res = await axios.post(`${import.meta.env.VITE_API_URL || "http://localhost:8000"}/start_game`);
 
       console.log("🎮 Start Game response:", res.data);
 
@@ -229,7 +229,7 @@ useEffect(() => {
     try {
       if (!sessionId) return;
 
-      const res = await axios.post("http://localhost:8000/upload_frame", {
+      const res = await axios.post(`${import.meta.env.VITE_API_URL || "http://localhost:8000"}/upload_frame`, {
         image,
         session_id: sessionId,
         preview: false ,  // 🔥 ADD THIS
@@ -275,7 +275,7 @@ useEffect(() => {
 
     const pollInterval = setInterval(async () => {
       try {
-        const res = await axios.get("http://localhost:8000/session_state");
+        const res = await axios.get(`${import.meta.env.VITE_API_URL || "http://localhost:8000"}/session_state`);
         //const { visitor_type, visit_count, days_since_last_visit } = res.data;
         const { visitor_type, visit_count, days_since_last_visit, similarity_debug } = res.data;
 
@@ -305,7 +305,7 @@ useEffect(() => {
   // -------------------------------
   const fetchFinalPrediction = async () => {
     try {
-      const res = await axios.get("http://localhost:8000/final_prediction");
+      const res = await axios.get(`${import.meta.env.VITE_API_URL || "http://localhost:8000"}/final_prediction`);
       console.log("FINAL PREDICTION RESPONSE:", res.data);
 
       if (res.data.error) {
@@ -328,7 +328,7 @@ useEffect(() => {
 
   const confirmReturningStart = async () => {
     try {
-      await axios.post("http://localhost:8000/acknowledge_returning");
+      await axios.post(`${import.meta.env.VITE_API_URL || "http://localhost:8000"}/acknowledge_returning`);
     } catch (e) {
       console.error("Acknowledge failed:", e);
     }

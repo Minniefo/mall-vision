@@ -10,7 +10,7 @@ export default function ReturningCheck() {
     if (!shot) return;
 
     const res = await axios.post(
-      "http://localhost:8000/check_returning_customer",
+      `${import.meta.env.VITE_API_URL || "http://localhost:8000"}/check_returning_customer`,
       { image: shot }
     );
 

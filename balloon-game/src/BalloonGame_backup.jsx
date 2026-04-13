@@ -27,9 +27,9 @@ function BalloonGame() {
   const [showReturningPopup, setShowReturningPopup] = useState(false);
 
   const [selectedDeviceId, setSelectedDeviceId] = useState(null);
-  const [screen, setScreen] = useState("idle"); 
+  const [screen, setScreen] = useState("idle");
   const [daysSinceLastVisit, setDaysSinceLastVisit] = useState(null);
-  const USE_UGREEN_CAMERA = false; 
+  const USE_UGREEN_CAMERA = false;
   // true  → use UGREEN USB webcam
   // false → use laptop default webcam
   // "idle" | "game" | "result"
@@ -81,7 +81,7 @@ function BalloonGame() {
     try {
       setScreen("game");
       // Fullscreen for kiosk feel (safe: only triggers if browser allows)
-      document.documentElement.requestFullscreen?.().catch(() => {});
+      document.documentElement.requestFullscreen?.().catch(() => { });
 
       const res = await axios.post("http://localhost:8000/start_game");
 
@@ -270,22 +270,22 @@ function BalloonGame() {
   }, [isRunning]);
 
   useEffect(() => {
-  if (screen !== "game") return;
+    if (screen !== "game") return;
 
-  const canvas = canvasRef.current;
-  if (!canvas) return;
+    const canvas = canvasRef.current;
+    if (!canvas) return;
 
-  const resizeCanvas = () => {
-    const rect = canvas.getBoundingClientRect();
-    canvas.width = rect.width;
-    canvas.height = rect.height;
-  };
+    const resizeCanvas = () => {
+      const rect = canvas.getBoundingClientRect();
+      canvas.width = rect.width;
+      canvas.height = rect.height;
+    };
 
-  resizeCanvas();
-  window.addEventListener("resize", resizeCanvas);
+    resizeCanvas();
+    window.addEventListener("resize", resizeCanvas);
 
-  return () => window.removeEventListener("resize", resizeCanvas);
-}, [screen]);
+    return () => window.removeEventListener("resize", resizeCanvas);
+  }, [screen]);
 
   // -------------------------------
   // Click to pop
@@ -426,175 +426,175 @@ function BalloonGame() {
     setIsRunning(true);
   };
 
-return (
-  <div className="kiosk-portrait-root">
+  return (
+    <div className="kiosk-portrait-root">
 
-    {/* IDLE SCREEN */}
-    {screen === "idle" && (
-    <div className="idle-screen">
+      {/* IDLE SCREEN */}
+      {screen === "idle" && (
+        <div className="idle-screen">
 
-        <div className="idle-hero">
-        <div className="idle-title">MALL VISION</div>
-        <div className="idle-subtitle">
-            FROM FACES TO INSIGHTS
-        </div>
-        </div>
-
-        {/* 🔵 Live Camera in Idle */}
-        <div className="idle-camera">
-        <div className="section-label">Live Camera</div>
-        <Webcam
-          audio={false}
-          ref={webcamRef}
-          screenshotFormat="image/jpeg"
-          width={360}
-          height={240}
-          className="webcam-frame"
-          videoConstraints={{
-            deviceId: selectedDeviceId ? { exact: selectedDeviceId } : undefined,
-            width: 1280,
-            height: 720,
-          }}
-        />
-        </div>
-
-    {/* 🔵 Mass Audience Recommendation */}
-    <div className="idle-mass">
-      <MassAudience isGameRunning={false} />
-    </div>
-
-    <div className="idle-cta">
-      <button className="start-btn-modern" onClick={startGame}>
-        ▶ Start Game
-      </button>
-    </div>
-
-  </div>
-)}
-
-    {/* GAME SCREEN */}
-    {screen === "game" && (
-      <>
-        {/* your existing top bar + canvas + camera + mass removed */}
-        <div className="kiosk-top">
-          <div className="kiosk-title">Balloon Popper</div>
-          <div className="kiosk-metrics">
-            <div className="metric-box">🎯 {score}</div>
-            <div className="metric-box">⏱ {timer}s</div>
-          </div>
-        </div>
-
-        
-
-        <div className="camera-wrap">
-          <div className="section-label">Your Camera</div>
-          <Webcam
-            audio={false}
-            ref={webcamRef}
-            screenshotFormat="image/jpeg"
-            width={360}
-            height={240}
-            className="webcam-frame"
-            videoConstraints={{
-              deviceId: selectedDeviceId ? { exact: selectedDeviceId } : undefined,
-              width: 1280,
-              height: 720,
-            }}
-          />
-        </div>
-
-        <div className="canvas-wrap">
-          <canvas
-            ref={canvasRef}
-            onClick={handleClick}
-            className="game-canvas"
-          />
-        </div>
-      </>
-    )}
-
-    {/* Returning popup stays as-is */}
-    {showReturningPopup && (
-      <div className="popup-overlay">
-        <div className="popup-card">
-          <h2>Welcome Back!</h2>
-          <p>
-            Welcome back! <br />
-
-            {daysSinceLastVisit === 0 && (
-              <>We saw you earlier today.</>
-            )}
-
-            {daysSinceLastVisit === 1 && (
-              <>We saw you yesterday.</>
-            )}
-
-            {daysSinceLastVisit > 1 && (
-              <>We last saw you {daysSinceLastVisit} days ago.</>
-            )}
-
-            <br />
-            This is your visit #{visitCount}.
-          </p>
-          {similarityDebug && (
-            <div className="similarity-debug">
-              <h4>AI Detection Details</h4>
-
-              <div>Cosine Similarity: {similarityDebug.cosine?.toFixed(3)}</div>
-              <div>Face Quality Score: {similarityDebug.quality?.toFixed(3)}</div>
-              <div>Temporal Weight: {similarityDebug.temporal?.toFixed(3)}</div>
-              <div>Final Similarity: {similarityDebug.final?.toFixed(3)}</div>
+          <div className="idle-hero">
+            <div className="idle-title">MALL VISION</div>
+            <div className="idle-subtitle">
+              FROM FACES TO INSIGHTS
             </div>
-          )}
-          <button className="btn" onClick={confirmReturningStart}>
-            Start Playing
-          </button>
-        </div>
-      </div>
-    )}
+          </div>
 
-    {/* Final popup stays as-is (but Close returns to idle) */}
-    {showAdPopup && (
-      <div className="popup-overlay">
-        <div className="popup-card">
-          <h2>Just For You</h2>
-
-          {finalAdImage ? (
-            <img src={finalAdImage} alt="Ad" className="popup-ad" />
-          ) : (
-            <p>No advertisement available.</p>
-          )}
-
-          <p><b>Score:</b> {score}</p>
-          <p><b>Detected:</b> {finalAge}, {finalGender}</p>
-
-          <div className="popup-buttons">
-            <button
-              className="btn"
-              onClick={() => {
-                setShowAdPopup(false);
-                setScreen("idle");
+          {/* 🔵 Live Camera in Idle */}
+          <div className="idle-camera">
+            <div className="section-label">Live Camera</div>
+            <Webcam
+              audio={false}
+              ref={webcamRef}
+              screenshotFormat="image/jpeg"
+              width={360}
+              height={240}
+              className="webcam-frame"
+              videoConstraints={{
+                deviceId: selectedDeviceId ? { exact: selectedDeviceId } : undefined,
+                width: 1280,
+                height: 720,
               }}
-            >
-              Close
+            />
+          </div>
+
+          {/* 🔵 Mass Audience Recommendation */}
+          <div className="idle-mass">
+            <MassAudience isGameRunning={false} />
+          </div>
+
+          <div className="idle-cta">
+            <button className="start-btn-modern" onClick={startGame}>
+              ▶ Start Game
             </button>
+          </div>
 
-            <button
-              className="btn"
-              onClick={() => {
-                setShowAdPopup(false);
-                startGame();
+        </div>
+      )}
+
+      {/* GAME SCREEN */}
+      {screen === "game" && (
+        <>
+          {/* your existing top bar + canvas + camera + mass removed */}
+          <div className="kiosk-top">
+            <div className="kiosk-title">Balloon Popper</div>
+            <div className="kiosk-metrics">
+              <div className="metric-box">🎯 {score}</div>
+              <div className="metric-box">⏱ {timer}s</div>
+            </div>
+          </div>
+
+
+
+          <div className="camera-wrap">
+            <div className="section-label">Your Camera</div>
+            <Webcam
+              audio={false}
+              ref={webcamRef}
+              screenshotFormat="image/jpeg"
+              width={360}
+              height={240}
+              className="webcam-frame"
+              videoConstraints={{
+                deviceId: selectedDeviceId ? { exact: selectedDeviceId } : undefined,
+                width: 1280,
+                height: 720,
               }}
-            >
-              Play Again
+            />
+          </div>
+
+          <div className="canvas-wrap">
+            <canvas
+              ref={canvasRef}
+              onClick={handleClick}
+              className="game-canvas"
+            />
+          </div>
+        </>
+      )}
+
+      {/* Returning popup stays as-is */}
+      {showReturningPopup && (
+        <div className="popup-overlay">
+          <div className="popup-card">
+            <h2>Welcome Back!</h2>
+            <p>
+              Welcome back! <br />
+
+              {daysSinceLastVisit === 0 && (
+                <>We saw you earlier today.</>
+              )}
+
+              {daysSinceLastVisit === 1 && (
+                <>We saw you yesterday.</>
+              )}
+
+              {daysSinceLastVisit > 1 && (
+                <>We last saw you {daysSinceLastVisit} days ago.</>
+              )}
+
+              <br />
+              This is your visit #{visitCount}.
+            </p>
+            {similarityDebug && (
+              <div className="similarity-debug">
+                <h4>AI Detection Details</h4>
+
+                <div>Cosine Similarity: {similarityDebug.cosine?.toFixed(3)}</div>
+                <div>Face Quality Score: {similarityDebug.quality?.toFixed(3)}</div>
+                <div>Temporal Weight: {similarityDebug.temporal?.toFixed(3)}</div>
+                <div>Final Similarity: {similarityDebug.final?.toFixed(3)}</div>
+              </div>
+            )}
+            <button className="btn" onClick={confirmReturningStart}>
+              Start Playing
             </button>
           </div>
         </div>
-      </div>
-    )}
+      )}
 
-  </div>
-);
+      {/* Final popup stays as-is (but Close returns to idle) */}
+      {showAdPopup && (
+        <div className="popup-overlay">
+          <div className="popup-card">
+            <h2>Just For You</h2>
+
+            {finalAdImage ? (
+              <img src={finalAdImage} alt="Ad" className="popup-ad" />
+            ) : (
+              <p>No advertisement available.</p>
+            )}
+
+            <p><b>Score:</b> {score}</p>
+            <p><b>Detected:</b> {finalAge}, {finalGender}</p>
+
+            <div className="popup-buttons">
+              <button
+                className="btn"
+                onClick={() => {
+                  setShowAdPopup(false);
+                  setScreen("idle");
+                }}
+              >
+                Close
+              </button>
+
+              <button
+                className="btn"
+                onClick={() => {
+                  setShowAdPopup(false);
+                  startGame();
+                }}
+              >
+                Play Again
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+    </div>
+  );
 }
 
 

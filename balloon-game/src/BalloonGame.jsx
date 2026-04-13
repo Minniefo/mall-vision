@@ -118,7 +118,7 @@ function BalloonGame({ onGameEnd, sessionId }) {
       const shot = webcamRef.current.getScreenshot();
       if (!shot || !sessionId) return;
 
-      axios.post("http://localhost:8000/upload_frame", {
+      axios.post(`${import.meta.env.VITE_API_URL || "http://localhost:8000"}/upload_frame`, {
         image: shot,
         session_id: sessionId,
         preview: false,

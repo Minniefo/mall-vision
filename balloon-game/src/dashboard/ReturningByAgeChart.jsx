@@ -5,7 +5,7 @@ import {Chart as ChartJS,BarElement,CategoryScale,LinearScale,Tooltip,Legend} fr
 
 ChartJS.register(BarElement,CategoryScale,LinearScale,Tooltip,Legend)
 
-const API_BASE="http://localhost:8000"
+const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:8000";
 
 export default function ReturningByAgeChart(){
 

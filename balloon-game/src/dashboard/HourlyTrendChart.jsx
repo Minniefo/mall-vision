@@ -21,7 +21,7 @@ ChartJS.register(
   Legend
 );
 
-const API_BASE = "http://localhost:8000";
+const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:8000";
 
 // Ensure we always show 24 hours (0–23), even if some have zero counts
 function normalizeHourly(rows) {

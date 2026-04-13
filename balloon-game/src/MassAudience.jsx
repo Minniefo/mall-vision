@@ -44,13 +44,13 @@ function MassAudience({ screen}) {
         const frameBase64 = canvas.toDataURL("image/jpeg");
 
         // 2️⃣ Send frame to backend (THIS TRIGGERS run_mass_inference)
-        await axios.post("http://localhost:8000/mass_frame", {
+        await axios.post(`${import.meta.env.VITE_API_URL || "http://localhost:8000"}/mass_frame`, {
           image: frameBase64,
           session_id: "mass"
         });
 
         // 3️⃣ Fetch current mass advertisement
-        const res = await axios.get("http://localhost:8000/current_mass_ad");
+        const res = await axios.get(`${import.meta.env.VITE_API_URL || "http://localhost:8000"}/current_mass_ad`);
 
 
         // const { ad_image, age_group, gender, emotion, engagement_pct, ad_source, detected_object  } = res.data;
@@ -128,12 +128,12 @@ function MassAudience({ screen}) {
 
           const frameBase64 = canvas.toDataURL("image/jpeg");
 
-          await axios.post("http://localhost:8000/mass_frame", {
+          await axios.post(`${import.meta.env.VITE_API_URL || "http://localhost:8000"}/mass_frame`, {
             image: frameBase64,
             session_id: "mass"
           });
 
-          const res = await axios.get("http://localhost:8000/current_mass_ad");
+          const res = await axios.get(`${import.meta.env.VITE_API_URL || "http://localhost:8000"}/current_mass_ad`);
 
           const {
             ad_image,
