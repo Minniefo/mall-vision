@@ -1,0 +1,43 @@
+version: '3.8'
+
+services:
+  backend:
+    build:
+      context: ./age-gender-backend
+      dockerfile: Dockerfile
+    container_name: mallvision_backend
+    ports:
+      - "8000:8000"
+    volumes:
+      # Mount the code for hot-reloading during local development
+      - ./age-gender-backend:/app
+    environment:
+      # The MongoDB URI points to the 'mongo' service inside docker
+      - MONGO_URI=mongodb://mongo:27017/mallvision
+      - ENVIRONMENT=development
+    depends_on:
+      - mongo
+    # Allow the container to use shared memory for PyTorch/TF processes
+    shm_size: '2gb'
+
+  frontend:
+    build:
+      context: ./balloon-game
+      dockerfile: Dockerfile
+    container_name: mallvision_frontend
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
+
+  mongo:
+    image: mongo:6.0
+    container_name: mallvision_mongo
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo_data:/data/db
+
+volumes:
+  # Persistent storage for MongoDB so data survives restarts
+  mongo_data:

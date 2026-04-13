@@ -1,0 +1,26 @@
+version: '3.8'
+
+services:
+  backend:
+    image: ${ECR_REGISTRY}/${ECR_REPOSITORY_BACKEND}:latest
+    container_name: mallvision_backend
+    ports:
+      - "8000:8000"
+    environment:
+      - MONGO_URI=${MONGO_URI}
+      - ENVIRONMENT=production
+    # Allow the container to use shared memory for PyTorch/TF processes
+    shm_size: '2gb'
+    restart: always
+
+  frontend:
+    image: ${ECR_REGISTRY}/${ECR_REPOSITORY_FRONTEND}:latest
+    container_name: mallvision_frontend
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
+    restart: always
+
+# We do not include the local MongoDB container here
+# as production leverages MongoDB Atlas.

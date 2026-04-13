@@ -1,107 +1,81 @@
-name: MallVision CI/CD
+name: MallVision CI/CD (Enterprise ECR)
 
 on:
   push:
     branches: [ "main" ]
-  pull_request:
-    branches: [ "main" ]
+
+env:
+  AWS_REGION: us-east-1                   # Adjust this if your AWS region is different
+  ECR_REPOSITORY_BACKEND: mallvision-backend
+  ECR_REPOSITORY_FRONTEND: mallvision-frontend
 
 jobs:
-
-  # =========================
-  # 🧠 Backend (FastAPI)
-  # =========================
-  backend:
-    name: Backend CI
+  build-and-push:
+    name: Build & Push to ECR
     runs-on: ubuntu-latest
-
-    defaults:
-      run:
-        working-directory: ./age-gender-backend
-
     steps:
       - name: 📥 Checkout code
         uses: actions/checkout@v4
 
-      - name: 🐍 Setup Python
-        uses: actions/setup-python@v5
+      - name: 🔐 Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
         with:
-          python-version: "3.10"
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
 
-      - name: 📦 Install dependencies
+      - name: 🐳 Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: 🏗️ Build and push Backend Image
+        env:
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
         run: |
-          python -m pip install --upgrade pip
-          pip install -r requirements-base.txt
-          pip install -r requirements-ai.txt
+          cd age-gender-backend
+          docker build -t $ECR_REGISTRY/$ECR_REPOSITORY_BACKEND:latest .
+          docker push $ECR_REGISTRY/$ECR_REPOSITORY_BACKEND:latest
 
-      - name: 🔍 Lint (optional but recommended)
+      - name: 🏗️ Build and push Frontend Image
+        env:
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
         run: |
-          pip install flake8
-          flake8 . || true
+          cd balloon-game
+          docker build -t $ECR_REGISTRY/$ECR_REPOSITORY_FRONTEND:latest .
+          docker push $ECR_REGISTRY/$ECR_REPOSITORY_FRONTEND:latest
 
-      - name: 🧪 Run tests
-        run: |
-          pip install pytest
-          pytest || true
-
-      - name: ⚙️ Check FastAPI app startup
-        run: |
-          python -c "from main2 import app; print('FastAPI app loaded successfully')"
-
-
-  # =========================
-  # ⚛️ Frontend (React)
-  # =========================
-  frontend:
-    name: Frontend CI
+  deploy:
+    name: Deploy to EC2
     runs-on: ubuntu-latest
-
+    needs: build-and-push
     steps:
-      - name: 📥 Checkout code
-        uses: actions/checkout@v4
-
-      - name: 🟢 Setup Node
-        uses: actions/setup-node@v4
+      - name: 🚀 SSH into EC2 & pull Docker Images
+        uses: appleboy/ssh-action@master
         with:
-          node-version: "20"
-
-      - name: 📦 Install dependencies
-        working-directory: ./balloon-game   # ⚠️ adjust if needed
-        run: npm install
-
-      - name: 🧪 Run tests
-        working-directory: ./balloon-game
-        run: npm test -- --watchAll=false || true
-
-      - name: 🏗️ Build frontend
-        working-directory: ./balloon-game
-        run: npm run build
-
-
-  # =========================
-  # 🐳 Optional Docker Build
-  # =========================
-  docker:
-    name: Docker Build
-    runs-on: ubuntu-latest
-    needs: [backend, frontend]
-
-    steps:
-      - name: 📥 Checkout code
-        uses: actions/checkout@v4
-
-      - name: 🐳 Build Docker image
-        run: |
-          docker build -t mallvision-app .
-
-      # Optional: Push to Docker Hub
-      # - name: 🔐 Login to DockerHub
-      #   uses: docker/login-action@v3
-      #   with:
-      #     username: ${{ secrets.DOCKER_USERNAME }}
-      #     password: ${{ secrets.DOCKER_PASSWORD }}
-
-      # - name: 🚀 Push image
-      #   run: |
-      #     docker tag mallvision-app yourusername/mallvision:latest
-      #     docker push yourusername/mallvision:latest
+          host: ${{ secrets.EC2_HOST }}
+          username: ubuntu
+          key: ${{ secrets.EC2_SSH_KEY }}
+          script: |
+            cd mallvision
+            
+            # 1. Pull the latest code (for docker-compose.prod.yml changes)
+            git pull origin main
+            
+            # 2. Configure AWS CLI on the EC2 instance
+            aws configure set aws_access_key_id ${{ secrets.AWS_ACCESS_KEY_ID }}
+            aws configure set aws_secret_access_key ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+            aws configure set default.region ${{ env.AWS_REGION }}
+            
+            # 3. Log Docker into AWS ECR
+            AWS_ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
+            export ECR_REGISTRY="${AWS_ACCOUNT_ID}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com"
+            aws ecr get-login-password --region ${{ env.AWS_REGION }} | docker login --username AWS --password-stdin $ECR_REGISTRY
+            
+            # 4. Set Environment Variables for docker-compose
+            export ECR_REPOSITORY_BACKEND=${{ env.ECR_REPOSITORY_BACKEND }}
+            export ECR_REPOSITORY_FRONTEND=${{ env.ECR_REPOSITORY_FRONTEND }}
+            export MONGO_URI="${{ secrets.MONGO_URI }}"
+            
+            # 5. Pull and run new containers
+            docker-compose -f docker-compose.prod.yml pull
+            docker-compose -f docker-compose.prod.yml up -d
