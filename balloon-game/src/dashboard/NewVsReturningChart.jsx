@@ -1,4 +1,3 @@
-//NewVsReturningChart.jsx
 import React, { useEffect, useMemo, useState } from "react";
 import axios from "axios";
 import { Pie } from "react-chartjs-2";
@@ -21,43 +20,55 @@ function normalizeDecisionLabel(label) {
   return s;
 }
 
-export default function NewVsReturningChart() {
+export default function NewVsReturningChart({ fromDate, toDate }) {
+
   const [rows, setRows] = useState([]);
   const [loading, setLoading] = useState(true);
   const [err, setErr] = useState("");
 
   useEffect(() => {
     let mounted = true;
+    let interval;
 
     async function fetchData() {
       try {
         setLoading(true);
         setErr("");
 
-        const res = await axios.get(`${API_BASE}/analytics/new-vs-returning`);
-        if (!mounted) return;
+        const res = await axios.get(`${API_BASE}/analytics/new-vs-returning`, {
+          params: {
+            from: fromDate,
+            to: toDate
+          }
+        });
 
+        if (!mounted) return;
         setRows(Array.isArray(res.data) ? res.data : []);
+
       } catch (e) {
         if (!mounted) return;
         setErr("Failed to load analytics data.");
         setRows([]);
+
       } finally {
         if (mounted) setLoading(false);
       }
     }
 
     fetchData();
-    const interval = setInterval(fetchData, 5000); // auto-refresh every 5s
+    interval = setInterval(fetchData, 5000);
 
     return () => {
       mounted = false;
       clearInterval(interval);
     };
-  }, []);
+
+  }, [fromDate, toDate]);
 
   const { labels, values, total } = useMemo(() => {
+
     const counts = {};
+
     for (const r of rows) {
       const label = normalizeDecisionLabel(r?._id);
       const count = Number(r?.count ?? 0);
@@ -66,38 +77,27 @@ export default function NewVsReturningChart() {
 
     const newCount = counts["new"] || 0;
     const returningCount = counts["returning"] || 0;
-    const otherCount =
-      Object.entries(counts)
-        .filter(([k]) => k !== "new" && k !== "returning")
-        .reduce((sum, [, v]) => sum + v, 0);
 
     const labelsOut = ["new", "returning"];
     const valuesOut = [newCount, returningCount];
 
-    // Only show "other" if it exists (helps if you log "unknown" etc.)
-    if (otherCount > 0) {
-      labelsOut.push("other");
-      valuesOut.push(otherCount);
-    }
-
     const totalOut = valuesOut.reduce((a, b) => a + b, 0);
+
     return { labels: labelsOut, values: valuesOut, total: totalOut };
+
   }, [rows]);
 
-  const chartData = useMemo(() => {
-    return {
-      labels,
-      datasets: [
-        {
-          data: values,
-          backgroundColor: ["#4CAF50", "#2196F3", "#FFC107"], // new, returning, other
-          borderColor: "#ffffff",
-          borderWidth: 2,
-        },
-      ],
-    };
-  }, [labels, values]);
-
+  const chartData = {
+    labels,
+    datasets: [
+      {
+        data: values,
+        backgroundColor: ["#4CAF50", "#2196F3"],
+        borderColor: "#ffffff",
+        borderWidth: 2,
+      },
+    ],
+  };
 
   if (loading) {
     return (
@@ -129,6 +129,7 @@ export default function NewVsReturningChart() {
   return (
     <div className="card">
       <h3>New vs Returning</h3>
+
       <div style={{ width: 320, maxWidth: "100%" }}>
         <Pie data={chartData} />
       </div>

@@ -1,4 +1,3 @@
-//SimilarityDistChart.jsx
 import React, { useEffect, useMemo, useState } from "react";
 import axios from "axios";
 import { Bar } from "react-chartjs-2";
@@ -17,7 +16,6 @@ const API_BASE = "http://localhost:8000";
 
 /**
  * Build histogram bins for similarity scores
- * Default: 10 bins (0.0–1.0)
  */
 function buildHistogram(rows, binCount = 10) {
   const bins = new Array(binCount).fill(0);
@@ -43,40 +41,53 @@ function buildHistogram(rows, binCount = 10) {
   return { labels, values: bins, total };
 }
 
-export default function SimilarityDistChart() {
+export default function SimilarityDistChart({ fromDate, toDate }) {
+
   const [rows, setRows] = useState([]);
   const [loading, setLoading] = useState(true);
   const [err, setErr] = useState("");
 
   useEffect(() => {
     let mounted = true;
+    let interval;
 
     async function fetchData() {
       try {
         setLoading(true);
         setErr("");
+
         const res = await axios.get(
-          `${API_BASE}/analytics/similarity-distribution`
+          `${API_BASE}/analytics/similarity-distribution`,
+          {
+            params: {
+              from: fromDate,
+              to: toDate
+            }
+          }
         );
+
         if (!mounted) return;
         setRows(Array.isArray(res.data) ? res.data : []);
+
       } catch (e) {
         if (!mounted) return;
         setErr("Failed to load similarity distribution.");
         setRows([]);
+
       } finally {
         if (mounted) setLoading(false);
       }
     }
 
     fetchData();
-    const interval = setInterval(fetchData, 5000); // auto-refresh
+    interval = setInterval(fetchData, 5000);
 
     return () => {
       mounted = false;
       clearInterval(interval);
     };
-  }, []);
+
+  }, [fromDate, toDate]);
 
   const { labels, values, total } = useMemo(
     () => buildHistogram(rows, 10),
@@ -85,19 +96,18 @@ export default function SimilarityDistChart() {
 
   const data = useMemo(
     () => ({
-        labels,
-        datasets: [
+      labels,
+      datasets: [
         {
-            label: "Identity Events",
-            data: values,
-            backgroundColor: "#E91E63",
-            borderRadius: 6,
+          label: "Identity Events",
+          data: values,
+          backgroundColor: "#E91E63",
+          borderRadius: 6,
         },
-        ],
+      ],
     }),
     [labels, values]
-    );
-
+  );
 
   const options = useMemo(
     () => ({
