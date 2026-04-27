@@ -44,6 +44,7 @@ from quality import compute_quality_score
 from datetime import datetime, timezone
 import services.engine_loader as engine_loader
 from services.filters import apply_flower_crown
+import time
 
 
 classifier = AdClassifier("model")
@@ -478,7 +479,11 @@ def get_session_state():
 
 anomaly_service = AnomalyService()
 
-@app.on_event("startup")
+SYSTEM_ACTIVE = False
+LAST_FRAME_TIME = 0
+SYSTEM_IDLE_TIMEOUT = 8  # seconds
+
+'''@app.on_event("startup")
 def startup_services():
 
     print("🚀 Initializing engines...")
@@ -488,13 +493,41 @@ def startup_services():
     print("✅ Engines ready")
 
     t = threading.Thread(target=anomaly_service.loop_forever, daemon=True)
-    t.start()
+    t.start()'''
+
+@app.on_event("startup")
+def startup_services():
+    print("🚀 Initializing engines...")
+    engine_loader.init_engines()
+    print("✅ Engines ready")
+
+    def guarded_anomaly_loop():
+        global SYSTEM_ACTIVE, LAST_FRAME_TIME
+
+        while True:
+            try:
+                # Auto-idle if no recent frames
+                if SYSTEM_ACTIVE and (time.time() - LAST_FRAME_TIME > SYSTEM_IDLE_TIMEOUT):
+                    SYSTEM_ACTIVE = False
+                    print("[SYSTEM] No recent frames -> anomaly monitoring idle")
+
+                if SYSTEM_ACTIVE:
+                    anomaly_service.run_once()
+            except Exception as e:
+                print("[ANOMALY LOOP ERROR]", e)
+
+            time.sleep(2)
+
+    t = threading.Thread(target=guarded_anomaly_loop, daemon=True)
+    t.start()    
     
 # ====================================================
 # Upload Frame (Age & Gender ONLY)
 # ====================================================
 @app.post("/upload_frame")
 def upload_frame(data: FrameInput):
+
+    global SYSTEM_ACTIVE, LAST_FRAME_TIME
     
     print(f"[STATE] visitor_type={session_state['visitor_type']} locked={session_state['identity_locked']} popup_shown={session_state['returning_popup_shown']} matched_id={session_state['matched_visitor_id']} probable_hits={session_state['probable_hits']}")
 
@@ -537,13 +570,16 @@ def upload_frame(data: FrameInput):
     # -------------------------------------
     if current_mode == Mode.MASS and not data.preview and not data.capture:
 
+        SYSTEM_ACTIVE = True
+        LAST_FRAME_TIME = time.time()
+
         print("[MODE] MASS – Running mass inference")
         print("[MASS] visitor_type:", session_state["visitor_type"])
         print("[MASS] identity_locked:", session_state["identity_locked"])
 
-        run_mass_inference(img)
+        #run_mass_inference(img)
 
-        if faces:
+        '''if faces:
             print(f"[MASS] Faces detected: {len(faces)}")
 
             if not session_state["identity_locked"]:
@@ -556,7 +592,13 @@ def upload_frame(data: FrameInput):
             if target_face is not None:
                 process_identity_precheck(img, [target_face])
         else:
-            print("[MASS] No faces detected")
+            print("[MASS] No faces detected")'''
+
+        if faces:
+            print(f"[MASS] Faces detected: {len(faces)}")
+            print("[MASS] Identity precheck skipped here; handled by /mass_frame")
+        else:
+            print("[MASS] No faces detected")    
 
         return {"status": "mass"}
 
@@ -764,18 +806,13 @@ def acknowledge_returning():
     session_state["returning_popup_shown"] = True
     return {"status": "acknowledged"}
 
-'''@app.post("/mass_frame")
-def receive_mass_frame(data: FrameInput):
-    img = decode_base64_image(data.image)
-    if img is None:
-        return {"status": "invalid image"}
-
-    run_mass_inference(img)
-
-    return {"status": "mass frame processed"}
-'''
 @app.post("/mass_frame")
 def receive_mass_frame(data: FrameInput):
+
+    global SYSTEM_ACTIVE, LAST_FRAME_TIME
+    SYSTEM_ACTIVE = True
+    LAST_FRAME_TIME = time.time()
+
     img = decode_base64_image(data.image)
     if img is None:
         return {"status": "invalid image"}
@@ -1013,7 +1050,7 @@ from datetime import datetime, timedelta
 def get_anomaly_alerts():
 
     now = datetime.utcnow()
-    window_start = now - timedelta(seconds=30)
+    window_start = now - timedelta(seconds=10)
 
     events = list(
         anomaly_events.find({

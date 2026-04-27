@@ -49,7 +49,7 @@ export default function Dashboard() {
 
     fetchAlerts();
 
-    const interval = setInterval(fetchAlerts, 2000);
+    const interval = setInterval(fetchAlerts, 5000);
 
     return () => clearInterval(interval);
 
@@ -82,14 +82,14 @@ export default function Dashboard() {
 
     fetchAnomalies();
 
-    const interval = setInterval(fetchAnomalies, 2000);
+    const interval = setInterval(fetchAnomalies, 5000);
 
     return () => clearInterval(interval);
 
   }, [fromDate, toDate]);
 
   //const latestAlert = alerts.length > 0 ? alerts[0] : null;
-  const latestAlert =
+  {/*const latestAlert =
     alerts && alerts.length > 0
       ? alerts.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp))[0]
       : null;
@@ -97,7 +97,23 @@ export default function Dashboard() {
   const latestAnomaly =
     anomalies && anomalies.length > 0
       ? anomalies.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp))[0]
+      : null;*/}
+
+  const ALERT_LIVE_MS = 10000; // 10 seconds
+
+  const latestAlert =
+    alerts && alerts.length > 0
+      ? alerts
+          .filter((a) => Date.now() - new Date(a.timestamp).getTime() < ALERT_LIVE_MS)
+          .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp))[0]
       : null;
+
+  const latestAnomaly =
+    anomalies && anomalies.length > 0
+      ? anomalies
+          .filter((a) => Date.now() - new Date(a.timestamp).getTime() < ALERT_LIVE_MS)
+          .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp))[0]
+      : null;    
 
   // -------------------------------
   // Add Ad State
@@ -283,6 +299,7 @@ export default function Dashboard() {
             <h3>Recent Security Events (Last 30s)</h3>
 
             {[...alerts, ...anomalies]
+              .filter((event) => Date.now() - new Date(event.timestamp).getTime() < ALERT_LIVE_MS)
               .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp))
               .slice(0, 6)
               .map((event, index) => (

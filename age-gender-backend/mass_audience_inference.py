@@ -79,6 +79,9 @@ last_novelty_scan_time = 0
 SUSPICIOUS_ALERT_THRESHOLD = 0.70
 FEAR_ALERT_THRESHOLD = 0.60
 
+EMOTION_ALERT_COOLDOWN = 5  # seconds
+last_emotion_alert_time = 0
+
 #engagement globals
 dominant_engagement_buffer = []
 engagement_service = None
@@ -343,6 +346,8 @@ def run_mass_inference(frame):
     global engagement_service
     global current_ad_pid
     global last_novelty_scan_time
+    global last_alert_state
+    global last_emotion_alert_time
 
     if engagement_service is None:
         engagement_service = get_engagement_service()
@@ -350,14 +355,28 @@ def run_mass_inference(frame):
     # -------------------------------
     # MODE GATE
     # -------------------------------
-    if current_mode != Mode.MASS:
+    '''if current_mode != Mode.MASS:
         dominant_age_buffer.clear()
         dominant_gender_buffer.clear()
         dominant_emotion_buffer.clear()
         dominant_engagement_buffer.clear()
         window_start_time = time.time()
         window_committed = False
-        return
+        return'''
+
+    if current_mode != Mode.MASS:
+        dominant_age_buffer.clear()
+        dominant_gender_buffer.clear()
+        dominant_emotion_buffer.clear()
+        dominant_engagement_buffer.clear()
+
+        consecutive_counter = 0
+        last_emotion = None
+        last_alert_state = False
+
+        window_start_time = time.time()
+        window_committed = False
+        return    
 
     rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
     detections = detector.detect_faces(rgb)
@@ -390,7 +409,7 @@ def run_mass_inference(frame):
     # -------------------------------
     # Per-frame inference
     # -------------------------------
-    if not faces_ag:
+    '''if not faces_ag:
         print("[MASS] No faces detected")
 
         # Reset smoothing buffers to avoid stale decisions
@@ -401,7 +420,20 @@ def run_mass_inference(frame):
 
         consecutive_counter = 0
         last_emotion = None
-        return
+        return'''
+
+    if not faces_ag:
+        print("[MASS] No faces detected")
+
+        dominant_age_buffer.clear()
+        dominant_gender_buffer.clear()
+        dominant_emotion_buffer.clear()
+        dominant_engagement_buffer.clear()
+
+        consecutive_counter = 0
+        last_emotion = None
+        last_alert_state = False
+        return  
     
     batch_ag = np.stack(faces_ag, axis=0)
     batch_em = np.stack(faces_em, axis=0)
@@ -624,7 +656,23 @@ def run_mass_inference(frame):
 
                 last_emotion = final_emotion
 
-                alert_triggered = consecutive_counter >= 2
+                #alert_triggered = consecutive_counter >= 2
+
+                current_time = time.time()
+
+                alert_triggered = False
+
+                if (
+                    consecutive_counter >= 2 and
+                    not last_alert_state and
+                    (current_time - last_emotion_alert_time) > EMOTION_ALERT_COOLDOWN
+                ):
+                    alert_triggered = True
+                    last_alert_state = True
+                    last_emotion_alert_time = current_time
+
+                elif not trigger_condition:
+                    last_alert_state = False
 
                 print("[ALERT DEBUG]",
                 "trigger_condition=", trigger_condition,
@@ -645,7 +693,7 @@ def run_mass_inference(frame):
                     engagement_pct=final_engagement
                 )'''
 
-                if trigger_condition:
+                if alert_triggered:
                     recommendation = {"action": "alert"}
                 else:
                     recommendation = engine_loader.ad_engine.recommend(
