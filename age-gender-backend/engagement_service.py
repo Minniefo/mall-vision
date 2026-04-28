@@ -11,7 +11,6 @@ from utils.sort import Sort
 from db import engagement_logs
 from datetime import datetime
 
-# Optional zone logic (keep if you want)
 try:
     from enhancements import ZoneEngine, zone_adjust_engagement
     ZONE_SUPPORT = True
@@ -164,7 +163,7 @@ class EngagementService:
             )
             self.state[tid]["last_seen"] = now
 
-            # zone (optional)
+            # zone 
             zone = "unknown"
             if self.use_zones and self.zone_engine is not None:
                 zone = self.zone_engine.get_zone(cx, cy)
@@ -190,7 +189,7 @@ class EngagementService:
                 and dwell_time > 2.0
             )
 
-            # zone adjustment (optional)
+            # zone adjustment
             final_engaged = base_engaged
             if self.use_zones and ZONE_SUPPORT:
                 final_engaged = zone_adjust_engagement(
@@ -237,7 +236,7 @@ class EngagementService:
             if final_engaged:
                 engaged_count += 1
 
-        # --- cleanup stale tracks (optional)
+        # --- cleanup stale tracks
         # For now: keep state; you can add "last_seen" logic later
 
         raw_pct = (engaged_count / total) * 100.0 if total > 0 else 0.0

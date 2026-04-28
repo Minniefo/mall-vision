@@ -22,8 +22,8 @@ THRESHOLD_RETURNING = 0.74
 THRESHOLD_PROBABLE  = 0.62
 
 # Safety controls
-AMBIGUITY_MARGIN = 0.03      # if top1 - top2 < margin → ambiguous
-STALE_MAX_DAYS = 120         # too old identities are not trusted strongly
+AMBIGUITY_MARGIN = 0.03      
+STALE_MAX_DAYS = 120         
 
 # Polygon points in pixel coordinates (x, y) clockwise order
 MASS_NEAR_ZONE_POLYGON = [(300, 400), (980, 400), (1250, 720), (50, 720)]
