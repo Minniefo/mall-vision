@@ -49,13 +49,15 @@ function PhotoBooth() {
         visitor_type,
         visit_count,
         session_id,
-        days_since_last_visit
+        days_since_last_visit,
+        similarity_debug
       } = res.data;
 
       setSessionId(session_id);
       setVisitorType(visitor_type);
       setVisitCount(visit_count);
       setDaysSinceLastVisit(days_since_last_visit);
+      setSimilarityDebug(similarity_debug);
 
       // 🔥 Returning user → wait for confirmation
       if (visitor_type === "returning") {
@@ -268,38 +270,8 @@ useEffect(() => {
 }, [screen, sessionId]);
 
   // -------------------------------
-  // Poll session state for returning popup during game
+  // Poll session state removed - identity is locked immediately by MASS mode
   // -------------------------------
-  /*useEffect(() => {
-    if (screen !== "game" || !sessionId|| showReturningPopup) return;
-
-    const pollInterval = setInterval(async () => {
-      try {
-        const res = await axios.get("http://localhost:8000/session_state");
-        //const { visitor_type, visit_count, days_since_last_visit } = res.data;
-        const { visitor_type, visit_count, days_since_last_visit, similarity_debug } = res.data;
-
-        setSimilarityDebug(similarity_debug);
-        setDaysSinceLastVisit(days_since_last_visit);
-
-        // If backend identified a returning customer, show popup and pause game
-        if (
-          visitor_type === "returning" &&
-          !res.data.returning_popup_shown &&
-          !showReturningPopup
-        ) {
-          setIsRunning(false);
-          setVisitorType(visitor_type);
-          setVisitCount(visit_count);
-          setShowReturningPopup(true);
-        }
-      } catch (err) {
-        console.error("Error polling session state:", err);
-      }
-    }, 2500); // Poll every 1 second
-
-    return () => clearInterval(pollInterval);
-  }, [screen, sessionId, showReturningPopup]);*/
 
 
   // -------------------------------
@@ -540,49 +512,63 @@ return (
       />
     )}
 
-    {/* Returning popup stays as-is */}
+    {/* Returning Customer Popup */}
     {showReturningPopup && (
-      <div className="popup-overlay">
-        <div className="popup-card">
-          <h2>Welcome Back!</h2>
-          <p>
-            Welcome back! <br />
+      <div className="popup-overlay active">
+        <div className="popup-card modern-popup">
+          <div className="popup-header">
+            <h2>Welcome Back!</h2>
+            <div className="popup-badge">Visit #{visitCount || 2}</div>
+          </div>
+          
+          <div className="popup-body">
+            <p className="welcome-text">
+              {daysSinceLastVisit === 0 || daysSinceLastVisit == null ? (
+                "It's great to see you again today!"
+              ) : daysSinceLastVisit === 1 ? (
+                "We just saw you yesterday!"
+              ) : (
+                `We last saw you ${daysSinceLastVisit} days ago.`
+              )}
+            </p>
 
-            {daysSinceLastVisit === 0 && (
-              <>We saw you earlier today.</>
+            {similarityDebug && (
+              <div className="similarity-debug">
+                <h4>AI Verification Diagnostics</h4>
+                <div className="debug-grid">
+                  <div className="debug-item">
+                    <span>Cosine:</span>
+                    <strong>{similarityDebug.cosine?.toFixed(3)}</strong>
+                  </div>
+                  <div className="debug-item">
+                    <span>Quality:</span>
+                    <strong>{similarityDebug.quality?.toFixed(3)}</strong>
+                  </div>
+                  <div className="debug-item">
+                    <span>Temporal:</span>
+                    <strong>{similarityDebug.temporal?.toFixed(3)}</strong>
+                  </div>
+                  <div className="debug-item highlight">
+                    <span>Match Score:</span>
+                    <strong>{similarityDebug.final?.toFixed(3)}</strong>
+                  </div>
+                </div>
+              </div>
             )}
+          </div>
 
-            {daysSinceLastVisit === 1 && (
-              <>We saw you yesterday.</>
-            )}
-
-            {daysSinceLastVisit > 1 && (
-              <>We last saw you {daysSinceLastVisit} days ago.</>
-            )}
-
-            <br />
-            This is your visit #{visitCount}.
-          </p>
-          {similarityDebug && (
-            <div className="similarity-debug">
-              <h4>AI Detection Details</h4>
-
-              <div>Cosine Similarity: {similarityDebug.cosine?.toFixed(3)}</div>
-              <div>Face Quality Score: {similarityDebug.quality?.toFixed(3)}</div>
-              <div>Temporal Weight: {similarityDebug.temporal?.toFixed(3)}</div>
-              <div>Final Similarity: {similarityDebug.final?.toFixed(3)}</div>
-            </div>
-          )}
-          <button className="btn" onClick={confirmReturningStart}>
-            Start Playing
-          </button>
+          <div className="popup-footer">
+            <button className="start-btn-modern" onClick={confirmReturningStart}>
+              Start Playing
+            </button>
+          </div>
         </div>
       </div>
     )}
 
     {/* Final popup stays as-is (but Close returns to idle) */}
     {showAdPopup && (
-      <div className="popup-overlay">
+      <div className="popup-overlay active">
         <div className="popup-card">
           <h2>Just For You</h2>
 
