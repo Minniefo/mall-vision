@@ -22,6 +22,12 @@ RUN pip install --no-cache-dir -r requirements-ai.txt
 # Copy the entire backend source code
 COPY . .
 
+# Move insightface models to the expected location in the container
+# This looks for .insightface in either the root or the backend folder
+RUN mkdir -p /root/.insightface && \
+    if [ -d "age-gender-backend/.insightface" ]; then cp -r age-gender-backend/.insightface/* /root/.insightface/; \
+    elif [ -d ".insightface" ]; then cp -r .insightface/* /root/.insightface/; fi
+
 # Expose FastAPI port
 EXPOSE 8000
 
