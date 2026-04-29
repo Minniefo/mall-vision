@@ -33,4 +33,4 @@ EXPOSE 8000
 
 # Run uvicorn server (Assuming main.py is your entrypoint)
 # In production on a limited machine, keeping workers to 1 is important
-CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000", "--workers", "1"]
+CMD ["uvicorn", "main2:app", "--host", "0.0.0.0", "--port", "8000", "--workers", "1"]
