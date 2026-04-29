@@ -64,7 +64,8 @@ def startup_event():
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
-        "http://localhost:5173"
+        #"http://localhost:5173"
+        "http://52.202.161.100"
     ],   # change to frontend URL later
     allow_credentials=True,
     allow_methods=["*"],
