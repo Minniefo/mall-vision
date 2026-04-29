@@ -9,7 +9,7 @@ mtcnn==1.0.0
 # Face embeddings
 insightface==0.2.1
 onnx==1.16.1
-onnxruntime==1.15.1
+onnxruntime==1.19.2
 
 # Engagement models
 torch==2.2.2

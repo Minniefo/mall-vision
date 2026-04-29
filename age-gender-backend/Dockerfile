@@ -5,6 +5,8 @@ FROM python:3.10-slim
 RUN apt-get update && apt-get install -y \
     libgl1 \
     libglib2.0-0 \
+    libgomp1 \
+    execstack \
     build-essential \
     && rm -rf /var/lib/apt/lists/*
 
@@ -16,6 +18,9 @@ COPY requirements-base.txt .
 COPY requirements-ai.txt .
 RUN pip install --no-cache-dir -r requirements-base.txt
 RUN pip install --no-cache-dir -r requirements-ai.txt
+
+# Fix for "cannot enable executable stack" error in onnxruntime
+RUN find /usr/local/lib -name 'onnxruntime_pybind11_state*.so' -exec execstack -c {} +
 
 
 # Copy the entire backend source code
