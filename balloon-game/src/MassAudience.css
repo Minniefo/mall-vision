@@ -46,10 +46,12 @@
 .mass-audience-panel {
   width: 100%;
   height: 100%;
+  flex: 1;
   display: flex;
   flex-direction: column;
   justify-content: center;
   align-items: center;
+  min-height: 0;
 }
 
 /* Title */
@@ -70,6 +72,8 @@
 /* Ad Image */
 
 .mass-ad-img {
+  width: 100%;
+  height: 100%;
   max-width: 100%;
   max-height: 100%;
   object-fit: contain;
@@ -105,12 +109,14 @@
 /*Removed for now - may add back later*/
 .mass-ad-container {
   width: 100%;
-  height: 45%;
+  flex: 1;
   display: flex;
   align-items: center;
   justify-content: center;
   overflow: hidden;
   position: relative;
+  min-height: 0;
+  margin: 10px 0;
 }
 
 .novelty-banner {
