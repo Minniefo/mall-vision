@@ -180,6 +180,36 @@ def returning_by_age(
     return list(visitors_collection.aggregate(pipeline))
 
 
+# -------------------------------------------------
+# Emotion Distribution
+# -------------------------------------------------
+@router.get("/emotion-distribution")
+def emotion_distribution(
+    from_date: str = Query(None, alias="from"),
+    to_date: str = Query(None, alias="to")
+):
+    match_stage = {
+        "emotion": {"$ne": None}
+    }
+
+    date_filter = get_utc_range(from_date, to_date)
+    if date_filter:
+        match_stage["timestamp"] = date_filter
+
+    pipeline = [
+        {"$match": match_stage},
+        {
+            "$group": {
+                "_id": "$emotion",
+                "count": {"$sum": 1}
+            }
+        },
+        {"$sort": {"count": -1}}
+    ]
+
+    return list(perception_collection.aggregate(pipeline))
+
+
 @router.get("/security-alerts")
 def get_security_alerts(
     from_date: str = Query(None, alias="from"),

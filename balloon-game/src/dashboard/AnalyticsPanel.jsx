@@ -4,6 +4,7 @@ import NewVsReturningChart from "./NewVsReturningChart";
 import HourlyTrendChart from "./HourlyTrendChart";
 import ReturningByAgeChart from "./ReturningByAgeChart";
 import AgeGenderChart from "./AgeGenderChart";
+import EmotionChart from "./EmotionChart";
 
 const API_BASE = "http://localhost:8000";
 
@@ -155,6 +156,7 @@ export default function AnalyticsPanel() {
 
       <div className="dashboard-grid">
         <div className="dashboard-card"><AgeGenderChart fromDate={fromDate} toDate={toDate} /></div>
+        <div className="dashboard-card"><EmotionChart fromDate={fromDate} toDate={toDate} /></div>
         <div className="dashboard-card"><NewVsReturningChart fromDate={fromDate} toDate={toDate} /></div>
         <div className="dashboard-card"><HourlyTrendChart fromDate={fromDate} toDate={toDate} /></div>
         <div className="dashboard-card"><ReturningByAgeChart fromDate={fromDate} toDate={toDate} /></div>
