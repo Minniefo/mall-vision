@@ -402,19 +402,21 @@ return (
         {/* 🔵 Live Camera in Idle */}
         <div className="idle-camera">
         <div className="section-label">Live Camera</div>
-        <Webcam
-          audio={false}
-          ref={webcamRef}
-          screenshotFormat="image/jpeg"
-          width={360}
-          height={240}
-          className="webcam-frame"
-          videoConstraints={{
-            deviceId: selectedDeviceId ? { exact: selectedDeviceId } : undefined,
-            width: 1280,
-            height: 720,
-          }}
-        />
+        <div className="camera-container">
+          <Webcam
+            audio={false}
+            ref={webcamRef}
+            screenshotFormat="image/jpeg"
+            width={360}
+            height={240}
+            className="webcam-frame"
+            videoConstraints={{
+              deviceId: selectedDeviceId ? { exact: selectedDeviceId } : undefined,
+              width: 1280,
+              height: 720,
+            }}
+          />
+        </div>
         
         </div>
 
@@ -459,6 +461,7 @@ return (
     width={360}
     height={240}
     className="webcam-frame"
+    style={{ opacity: filteredImage ? 0 : 1 }}
   />
 
   {filteredImage && (
