@@ -73,7 +73,7 @@ last_alert_state = False
 
 NOVELTY_ENGAGEMENT_THRESHOLD = 40
 #NOVELTY_ENGAGEMENT_THRESHOLD = 101
-NOVELTY_SCAN_INTERVAL = 10   # seconds
+NOVELTY_SCAN_INTERVAL = 30   # seconds (Optimized for 3-window streak)
 last_novelty_scan_time = 0
 low_engagement_streak = 0  
 
