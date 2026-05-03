@@ -75,7 +75,7 @@ NOVELTY_ENGAGEMENT_THRESHOLD = 40
 #NOVELTY_ENGAGEMENT_THRESHOLD = 101
 NOVELTY_SCAN_INTERVAL = 10   # seconds
 last_novelty_scan_time = 0
-low_engagement_streak = 0  # 👈 Added streak counter
+low_engagement_streak = 0  
 
 SUSPICIOUS_ALERT_THRESHOLD = 0.70
 FEAR_ALERT_THRESHOLD = 0.60

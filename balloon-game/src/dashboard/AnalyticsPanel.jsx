@@ -66,41 +66,66 @@ export default function AnalyticsPanel() {
     fetchSummary();
   }, [fromDate, toDate]);
 
-  const ALERT_LIVE_MS = 10000; // 10 seconds
+  const [acknowledgedIds, setAcknowledgedIds] = useState(new Set());
+  const ALERT_LIVE_MS = 60000; // 60 seconds
 
   const latestAlert = alerts && alerts.length > 0
     ? alerts
-        .filter((a) => Date.now() - new Date(a.timestamp).getTime() < ALERT_LIVE_MS)
+        .filter((a) => {
+          const isFresh = Date.now() - new Date(a.timestamp).getTime() < ALERT_LIVE_MS;
+          const isNotAcknowledged = !acknowledgedIds.has(a.timestamp);
+          return isFresh && isNotAcknowledged;
+        })
         .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp))[0]
     : null;
 
   const latestAnomaly = anomalies && anomalies.length > 0
     ? anomalies
-        .filter((a) => Date.now() - new Date(a.timestamp).getTime() < ALERT_LIVE_MS)
+        .filter((a) => {
+          const isFresh = Date.now() - new Date(a.timestamp).getTime() < ALERT_LIVE_MS;
+          const isNotAcknowledged = !acknowledgedIds.has(a.timestamp);
+          return isFresh && isNotAcknowledged;
+        })
         .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp))[0]
     : null;
+
+  const handleAcknowledge = (id) => {
+    setAcknowledgedIds((prev) => {
+      const next = new Set(prev);
+      next.add(id);
+      return next;
+    });
+  };
 
   return (
     <>
       {/* 🚨 Emotion Alert */}
       {latestAlert && (
         <div className="alert-banner emotion-alert">
-          🚨 EMOTION ALERT: {latestAlert.alert_reason?.toUpperCase()}
-          <span className="alert-time">
-            {new Date(latestAlert.timestamp).toLocaleTimeString(("en-US", {
-              timeZone: "Asia/Colombo"
-            }))}
-          </span>
+          <span>🚨 EMOTION ALERT: {latestAlert.alert_reason?.toUpperCase()}</span>
+          <div className="alert-actions">
+            <span className="alert-time">
+              {new Date(latestAlert.timestamp).toLocaleTimeString("en-US", {
+                timeZone: "Asia/Colombo"
+              })}
+            </span>
+            <button className="ack-btn" onClick={() => handleAcknowledge(latestAlert.timestamp)}>
+              Acknowledge
+            </button>
+          </div>
         </div>
       )}
 
       {/* 🚨 Behaviour Alert */}
       {latestAnomaly && (
         <div className="alert-banner behaviour-alert">
-          🚨 BEHAVIOUR ALERT: {latestAnomaly.anomaly_type?.toUpperCase()}
-          <span className="alert-time">
-            Track {latestAnomaly.track_id}
-          </span>
+          <span>🚨 BEHAVIOUR ALERT: {latestAnomaly.anomaly_type?.toUpperCase()}</span>
+          <div className="alert-actions">
+            <span className="alert-time">Track {latestAnomaly.track_id}</span>
+            <button className="ack-btn" onClick={() => handleAcknowledge(latestAnomaly.timestamp)}>
+              Acknowledge
+            </button>
+          </div>
         </div>
       )}
 

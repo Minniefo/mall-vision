@@ -179,6 +179,29 @@
   opacity: 0.9;
 }
 
+.alert-actions {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
+.ack-btn {
+  background: rgba(255, 255, 255, 0.2);
+  color: white;
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  padding: 6px 12px;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.ack-btn:hover {
+  background: rgba(255, 255, 255, 0.3);
+  transform: scale(1.05);
+}
+
 /* Flashing animation */
 @keyframes pulseAlert {
   0% {
