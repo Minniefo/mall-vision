@@ -78,8 +78,20 @@ class EngagementService:
     def _crop_head(frame, bbox):
         x1, y1, x2, y2 = bbox
         h = y2 - y1
-        head_y2 = y1 + int(0.4 * h)
-        head = frame[y1:head_y2, x1:x2]
+        w = x2 - x1
+        
+        # Focused head crop:
+        # Top 25% of height (reduces chest/shoulder overlap)
+        head_y2 = y1 + int(0.25 * h)
+        
+        # Narrow the width (center 50%) to be extremely focused on the face
+        x_center = x1 + w // 2
+        narrow_w = int(w * 0.5)
+        nx1 = max(0, x_center - narrow_w // 2)
+        nx2 = min(frame.shape[1], x_center + narrow_w // 2)
+        
+        head = frame[y1:head_y2, nx1:nx2]
+        
         if head.size == 0:
             return None
         return cv2.resize(head, (64, 64))
@@ -88,7 +100,14 @@ class EngagementService:
         t = torch.tensor(head_crop / 255.0).permute(2, 0, 1).unsqueeze(0).float().to(self.device)
         with torch.no_grad():
             out = self.head_model(t)
-        return "looking_at_kiosk" if out.argmax().item() == 1 else "looking_away"
+        
+        probs = torch.softmax(out, dim=1)
+        conf = probs[0][1].item()
+        
+        # 🔍 DIAGNOSTIC LOG
+        print(f"[DEBUG CONF] Track {self.state.get('tid', '??')} | Confidence: {conf:.4f}")
+        
+        return "looking_at_kiosk" if conf > 0.85 else "looking_away"
 
     # -------------------------
     # main API
@@ -200,14 +219,20 @@ class EngagementService:
             score = self.state[tid]["engagement_score"]
 
             if o == "looking_at_kiosk":
-                score += 0.15
+                # Ultra-strict: Slow gain
+                score += 0.05
             else:
-                score -= 0.08
+                # Ultra-strict: Fast penalty
+                score -= 0.20
 
             score = max(0.0, min(1.0, score))
             self.state[tid]["engagement_score"] = score
 
-            final_engaged = score > 0.5    
+            looking_ratio = self.state[tid]["looking_frames"] / max(1, self.state[tid]["total_frames"])
+            dwell_time = now - self.state[tid]["first_seen"]
+            
+            # Nuclear Strictness: Higher score required, 5s minimum dwell
+            final_engaged = score > 0.7 and looking_ratio > 0.6 and dwell_time > 5.0    
 
             self.state[tid]["engaged"] = final_engaged
             self.state[tid]["zone"] = zone

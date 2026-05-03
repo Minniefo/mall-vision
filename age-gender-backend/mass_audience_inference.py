@@ -71,10 +71,11 @@ consecutive_counter = 0
 last_emotion = None
 last_alert_state = False
 
-#NOVELTY_ENGAGEMENT_THRESHOLD = 30
-NOVELTY_ENGAGEMENT_THRESHOLD = 101
+NOVELTY_ENGAGEMENT_THRESHOLD = 40
+#NOVELTY_ENGAGEMENT_THRESHOLD = 101
 NOVELTY_SCAN_INTERVAL = 10   # seconds
 last_novelty_scan_time = 0
+low_engagement_streak = 0  # 👈 Added streak counter
 
 SUSPICIOUS_ALERT_THRESHOLD = 0.70
 FEAR_ALERT_THRESHOLD = 0.60
@@ -345,7 +346,7 @@ def run_mass_inference(frame):
     global latest_eng_stats
     global engagement_service
     global current_ad_pid
-    global last_novelty_scan_time
+    global last_novelty_scan_time, low_engagement_streak
     global last_alert_state
     global last_emotion_alert_time
 
@@ -749,9 +750,20 @@ def run_mass_inference(frame):
                             f"BelowThreshold={final_engagement < NOVELTY_ENGAGEMENT_THRESHOLD}"
                         )
 
+                    # -------------------------
+                    # STREAK TRACKING (Added)
+                    # -------------------------
+                    if final_engagement < NOVELTY_ENGAGEMENT_THRESHOLD:
+                        low_engagement_streak += 1
+                    else:
+                        low_engagement_streak = 0
+
+                    if DEBUG_ENGAGEMENT:
+                        print(f"[NOVELTY STREAK] Current streak: {low_engagement_streak}")
+
                     if (
                         NOVELTY_ENABLED
-                        and final_engagement < NOVELTY_ENGAGEMENT_THRESHOLD
+                        and low_engagement_streak >= 3
                         and (current_time - last_novelty_scan_time) > NOVELTY_SCAN_INTERVAL
                     ):
                         last_novelty_scan_time = current_time
