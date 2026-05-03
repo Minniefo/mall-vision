@@ -10,7 +10,7 @@
 ---
 
 ## 🔗 Live Deployment
-Experience the kiosk in action: [http://52.202.161.100/kiosk](http://52.202.161.100/kiosk)
+Experience the kiosk in action: [http://52.202.161.100/](http://52.202.161.100/)
 
 ---
 
