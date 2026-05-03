@@ -10,7 +10,7 @@ BASE_EMBED_UPDATE_ALPHA = 0.3     # initial learning rate
 
 # Phase 3 – temporal decay
 TEMPORAL_DECAY_TAU_DAYS = 30.0   # τ (30 days ≈ strong but forgiving)
-MIN_TEMPORAL_WEIGHT = 0.2       # floor to avoid zeroing similarity
+MIN_TEMPORAL_WEIGHT = 0.5       # floor to avoid zeroing similarity (increased for demo)
 
 # Phase 3.5 – Mass-mode Near-Zone ROI gating
 MASS_NEAR_ZONE_ENABLED = True
@@ -18,7 +18,7 @@ MASS_NEAR_ZONE_ENABLED = True
 # Phase 4 – decision thresholds
 #THRESHOLD_RETURNING = 0.78   # confident match
 #THRESHOLD_PROBABLE  = 0.65   # weak match (needs more evidence)
-THRESHOLD_RETURNING = 0.74
+THRESHOLD_RETURNING = 0.70      # lowered to improve identification in varied lighting
 THRESHOLD_PROBABLE  = 0.62
 
 # Safety controls
